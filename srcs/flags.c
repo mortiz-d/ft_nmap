@@ -143,7 +143,6 @@ static t_list **extract_scan(char *str)
         new_aux = malloc(sizeof(t_scan));
         if (!new_aux)
             return NULL;
-
         *new_aux = aux;
         ft_lstadd_back(lst_scans, ft_lstnew(new_aux));
     }

@@ -55,12 +55,7 @@ void debug_params(t_params *params)
 
     if (params->destination)
         printf("Destination: %s\n", params->destination);
-
-    // printf("TTL: %d\n", params->ttl);
-    // printf("Timeout: %d ms\n", params->timeout_ms);
-    // printf("Interval: %d\n", params->interval);
-    // printf("Count: %d\n", params->count);
-    // printf("Payload size: %d\n", params->payload_size);
+        
     printf("\n--- HELP ---\n");
     if (params->help)
         printf("ACTIVATED\n");

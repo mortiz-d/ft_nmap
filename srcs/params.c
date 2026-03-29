@@ -34,3 +34,43 @@ t_params *get_params (int argc, char **argv)
 
     return params;
 }
+
+void free_list(t_list *lst, void (*del)(void *))
+{
+    t_list *tmp;
+
+    while (lst)
+    {
+        tmp = lst->next;
+        del(lst->content);
+        free(lst);
+        lst = tmp;
+    }
+}
+
+void free_params(t_params *param)
+{
+
+    if (param->destination)
+        free (param->destination);
+    if (param->scan)
+    {
+        ft_lstiter(*param->scan,free);
+        ft_lstclear(param->scan);
+        free (param->scan);
+    }
+    if (param->filename_ip)
+    {
+        ft_lstiter(*param->filename_ip,free);
+        ft_lstclear(param->filename_ip);
+        free (param->filename_ip);
+    }
+    if (param->ports)
+    {
+        ft_lstiter(*param->ports,free);
+        ft_lstclear(param->ports);
+        free (param->ports);
+    }
+    free(param);
+    return;
+}
