@@ -95,6 +95,18 @@ static t_list **extract_ports(char* str)
 
 }
 
+t_list **default_ports(void)
+{
+    t_list **lst_ports = ft_calloc(1,sizeof(t_list*));
+    t_port *aux;
+
+    aux = create_port("0-1023");
+    if (aux)
+        ft_lstadd_back(lst_ports,ft_lstnew(aux));
+
+    return lst_ports;
+}
+
 static t_list **extract_filename_ips(char *filename)
 {
     t_list **lst_ips = ft_calloc(1,sizeof(t_list*));
@@ -160,6 +172,8 @@ void test_flag(t_flag *flag,t_params *params)
         params->help = true;
     if (check_flag_status(flag,"--ports"))
         params->ports = extract_ports(get_flag_value(flag,"--ports")->s);
+    else
+        params->ports = default_ports();
     if (check_flag_status(flag,"--ip"))
         params->destination = ft_strdup(get_flag_value(flag,"--ip")->s);
     if (check_flag_status(flag,"--file"))

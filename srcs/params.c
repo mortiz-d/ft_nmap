@@ -8,9 +8,9 @@ t_params *params_default_config (void)
     param->scan = NULL;
     param->filename_ip = NULL;
     param->ports = NULL;
-    
     return param;
 }
+
 
 
 t_params *get_params (int argc, char **argv)

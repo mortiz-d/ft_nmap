@@ -77,6 +77,9 @@ void test_flag(t_flag *flag,t_params *params);
 t_params *get_params (int argc, char **argv);
 void free_params(t_params *params);
 
+//DEFAULT CONFIG
+t_list **default_ports(void);
+
 //DEBUG
 void debug_params(t_params *params);
 
