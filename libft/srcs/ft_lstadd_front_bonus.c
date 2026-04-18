@@ -13,7 +13,17 @@
 #include "../lib/libft.h"
 void	ft_lstadd_front(t_list **lst, t_list *new)
 {
-	(*lst)->prev = new;
-	new->next = *lst;
+	if (!lst || !new)
+		return;
+
+	if (*lst)
+	{
+		new->next = *lst;
+		(*lst)->prev = new;
+	}
+	else
+		new->next = NULL;
+
+	new->prev = NULL;
 	*lst = new;
 }

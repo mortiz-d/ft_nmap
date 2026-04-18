@@ -6,10 +6,12 @@ CYAN = @echo "\033[0;36m"
 RESET = "\033[1;0m"
 
 # RESOURCES #
-SRCS =	srcs/main.c \
-		srcs/debug.c \
+SRCS =	srcs/main.c   \
+		srcs/debug.c  \
 		srcs/params.c \
-		srcs/flags.c 
+		srcs/scan.c \
+		srcs/dns.c \
+		srcs/nmap.c 
 
 # FLAGS #
 OBJS_DIR = objetos

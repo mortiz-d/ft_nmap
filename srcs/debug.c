@@ -73,8 +73,8 @@ void debug_params(t_params *params)
         printf("No ports\n");
 
     printf("\n--- IPS FROM FILE ---\n");
-    if (params->filename_ip)
-        print_ips(*params->filename_ip);
+    if (params->ip_list)
+        print_ips(*params->ip_list);
     else
         printf("No IPs\n");
 

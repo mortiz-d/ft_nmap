@@ -12,6 +12,7 @@ SRCS = 	srcs/ft_memset.c 			\
 		srcs/ft_memmove.c 			\
 		srcs/ft_memchr.c 			\
 		srcs/ft_memcmp.c 			\
+		srcs/ft_isnumber.c 			\
 		srcs/ft_strlen.c 			\
 		srcs/ft_isalpha.c 			\
 		srcs/ft_isdigit.c 			\
@@ -61,6 +62,7 @@ SRCS = 	srcs/ft_memset.c 			\
 		srcs/ft_print_unsigned_integer.c	\
 		srcs/ft_printf.c					\
 		srcs/flag/ft_flag.c					\
+		srcs/flag/ft_flag_visualice.c		\
 		srcs/huffman_compresion/huffman_destroy_list.c	\
 		srcs/huffman_compresion/huffman_count_list.c	\
 		srcs/huffman_compresion/huffman_calculate_size.c\

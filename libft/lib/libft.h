@@ -44,39 +44,40 @@ typedef struct s_list
 	struct s_list	*prev;
 }	t_list;
 
-enum flag_type {
-    FLAG_INTEGER,	//Needs an argument type integer
-    FLAG_STRING,     //Needs an argument type string
-	FLAG_CHAR,		//Needs an argument type char
-	FLAG_BOOLEAN,	//Needs an argument type boolean
-	FLAG_NONE		//Doesnt needs any argument, just the flag presence
-};
+// enum flag_type {
+//     FLAG_INTEGER,	//Needs an argument type integer
+//     FLAG_STRING,     //Needs an argument type string
+// 	FLAG_CHAR,		//Needs an argument type char
+// 	FLAG_BOOLEAN,	//Needs an argument type boolean
+// 	FLAG_NONE		//Doesnt needs any argument, just the flag presence
+// };
 
-typedef union s_argument {
-    int    i;
-    float  f;
-    double d;
-    char   c;
-    char  *s;
-} t_argument;
+// typedef union s_argument {
+//     int    i;
+//     float  f;
+//     double d;
+//     char   c;
+//     char  *s;
+// } t_argument;
 
-typedef struct s_flag
-{
-	enum flag_type	type;
-	char			*name;
-	int 			min_range;
-	int 			max_range;
-	t_argument		*argument;
-	int				status;
-	struct s_flag	*next;
-	struct s_flag	*prev;
-}	t_flag;
+// typedef struct s_flag
+// {
+// 	enum flag_type	type;
+// 	char			*name;
+// 	int 			min_range;
+// 	int 			max_range;
+// 	t_argument		*argument;
+// 	int				status;
+// 	struct s_flag	*next;
+// 	struct s_flag	*prev;
+// }	t_flag;
 
 int			ft_isalpha(int c);
 int			ft_isdigit(int c);
 int			ft_isalnum(int c);
 int			ft_isascii(int c);
 int			ft_isprint(int c);
+int 		ft_isnumber(char *str);
 int			ft_strlen(const char *str);
 int 		ft_is_exact_word(char *str, char *cmp);
 void		*ft_memset(void *str, int c, size_t size);
@@ -132,13 +133,15 @@ int		ft_write_hexadecimal_XX(unsigned long int num, char * str,int end_loop,int 
 int	    ft_write_size_t(size_t number);
 
 //FLAGS
-t_flag *set_up_flag(t_flag *flag,char * name, enum flag_type type,int min_range,int max_range);
-t_flag *find_flag(t_flag *flag, char *c);
-int check_flag_status(t_flag *start_flag, char *c);
-t_argument *get_flag_value(t_flag *start_flag, char *c);
-int process_flags(int argc, char **argv, t_flag *flag);
-void visualize_flags(t_flag *flag);
-void	ft_flagclear(t_flag **lst);
+
+
+// t_flag *set_up_flag(t_flag *flag,char * name, enum flag_type type,int min_range,int max_range);
+// t_flag *find_flag(t_flag *flag, char *c);
+// int check_flag_status(t_flag *start_flag, char *c);
+// t_argument *get_flag_value(t_flag *start_flag, char *c);
+// int process_flags(int argc, char **argv, t_flag *flag);
+// void visualize_flags(t_flag *flag);
+// void	ft_flagclear(t_flag **lst);
 
 //HUFFMAN
 t_list *ft_huffman_find(t_list *lst, char c);
