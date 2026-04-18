@@ -12,16 +12,17 @@ int main(int argc, char **argv)
 {
     t_list *flags = NULL;
     t_params *params = NULL;
+    // t_list *aux = NULL;
 
     params =  params_default_config();
     flags = flags_config();
 
     if (!process_flags(argc, argv, flags,params))
     {
-        printf("Theres a problem with the flags\n");
         free_all(flags, params);
+        return 0;
     }
-    // debug_params(params);
+    debug_params(params);
 
     free_all(flags, params);
     for (int i = 1; i < argc; i++)

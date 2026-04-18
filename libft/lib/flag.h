@@ -4,7 +4,8 @@
 
 struct s_flag;
 struct s_params;
-typedef void (*t_flag_apply)(struct s_flag *, struct s_params *);
+typedef int  (*t_flag_apply)(struct s_flag *, struct s_params *);
+typedef void (*t_flag_not_apply)(struct s_flag *, struct s_params *);
 
 enum flag_type {
     FLAG_INTEGER,	//Needs an argument type integer
@@ -22,8 +23,9 @@ typedef struct s_flag
     enum flag_type  type;
     int             active;
     int             error;
-    void (*apply)(struct s_flag *flag, struct s_params *params);
-    void (*not_apply)(struct s_flag *flag, struct s_params *params);
+
+    t_flag_apply        apply;
+    t_flag_not_apply    not_apply;
     
     union
     {
@@ -38,7 +40,7 @@ typedef struct s_flag
     } value;
 }   t_flag;
 
-t_list *set_up_flag(t_list *flag, char *name,enum flag_type type, t_flag_apply apply,t_flag_apply not_apply,...);
+t_list *set_up_flag(t_list *flag, char *name,enum flag_type type, t_flag_apply apply,t_flag_not_apply not_apply,...);
 int process_flags(int argc, char **argv, t_list *flag,struct s_params *params);
 void print_flag(void *content);
 

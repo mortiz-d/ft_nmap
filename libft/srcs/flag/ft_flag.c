@@ -41,7 +41,7 @@ void free_flags(t_list **flags)
 }
 
 
-t_flag *ft_flagnew(char *name, enum flag_type type, t_flag_apply apply,t_flag_apply not_apply, va_list args)
+t_flag *ft_flagnew(char *name, enum flag_type type, t_flag_apply apply,t_flag_not_apply not_apply, va_list args)
 {
     t_flag *flag;
 
@@ -85,7 +85,8 @@ t_flag *ft_flagnew(char *name, enum flag_type type, t_flag_apply apply,t_flag_ap
     return flag;
 }
 
-t_list *set_up_flag(t_list *flag, char *name,enum flag_type type, t_flag_apply apply,t_flag_apply not_apply,...)
+
+t_list *set_up_flag(t_list *flag, char *name,enum flag_type type, t_flag_apply apply,t_flag_not_apply not_apply,...)
 {
     t_list  *node;
     t_flag  *new_flag;
@@ -294,11 +295,11 @@ int process_flags(int argc, char **argv, t_list *flag,struct s_params *params)
         //if flag is found we need to extract its data from the argument
 		if (aux)
 		{
-            // printf("Encuentra el flag en el argumento\n");
             f = aux->content;
             if (validate_argument(argc,&i,argv,f) && f->apply)
             {
-                f->apply(f,params);
+                if (!f->apply(f,params))
+                    ret = 0;
             }
             else
             {
