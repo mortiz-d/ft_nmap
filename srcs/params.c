@@ -54,39 +54,43 @@ static bool check_integer(char *str)
     return true;
 }
 
-static t_port* create_port (char *str)
+static int add_port_range(t_list **lst, char* str )
 {
-    t_port  *ret;
+    t_port *aux;
     char    **ports = NULL;
-    bool    create = false;
     int     count = 0;
+    int     min, max, created;
 
-    ret = ft_calloc(1,sizeof(t_port));
-    if (ft_strchr(str,'-') != NULL)
+    created = 0;
+    ports = ft_split(str,'-');
+    while (ports[count])
+        count++;
+    created = 0;     
+    if (count == 2)
     {
-        ret->range = true;
-        ports = ft_split(str,'-');
-        while (ports[count])
-            count++;
-                
-        if (count == 2)
+        if (check_integer(ports[0]) && check_integer(ports[1]))
         {
-            if (check_integer(ports[0]) && check_integer(ports[1]))
+            min = ft_atoi(ports[0]);
+            max = ft_atoi(ports[1]);
+
+            if (min < max)
             {
-                create = true;
-                ret->port_min = ft_atoi(ports[0]);
-                ret->port_max = ft_atoi(ports[1]);
+                for (int p = min; p <= max; p++)
+                {
+                    aux = ft_calloc(1, sizeof(t_port));
+                    aux->port_nbr = p;
+                    ft_lstadd_back(lst, ft_lstnew(aux));
+                }
+                created=1;
             }
+            else
+                printf("Error: Port range %s - %s is backwards are you sure?\n",ports[0],ports[1]);
         }
+        else
+            printf("Error: Cannot determine port range %s - %s\n",ports[0],ports[1]);
     }
     else
-    {
-        if (check_integer(str))
-        {
-            ret->port_nbr = ft_atoi(str);
-            create = true;
-        }
-    }
+        printf("Error: Cannot determine port range '%s'\n",str);
 
     if (ports)
     {
@@ -95,61 +99,88 @@ static t_port* create_port (char *str)
         free(ports);
     }
 
-    if(!create)
-    {
-        free(ret);
-        return NULL;
-    }
-    return ret;
+    return created;
 }
 
-static t_list **extract_ports(char* str)
-{
-    t_list **lst_ports = ft_calloc(1,sizeof(t_list*));
-    char **ports = NULL ;
-    t_port *aux = NULL;
-    
 
-    printf("PUERTOS %s\n",str);
-    ports = ft_split(str,',');
-    for(int i = 0; ports[i] != NULL; i++)
+static int create_port (t_list **lst,char *str)
+{
+    t_port  *aux;
+
+    aux = ft_calloc(1,sizeof(t_port));
+    
+    if (!check_integer(str))
     {
-        aux = create_port(ports[i]);
-        if (aux)
-            ft_lstadd_back(lst_ports,ft_lstnew(aux));
-        else
-        {
-            ft_lstclear(lst_ports);
-            free(lst_ports);
-            lst_ports = NULL;
-            break;
-        }
+        printf("Error: '%s' is not a number\n",str);
+        free(aux);
+        return 0;
+    }
+    aux->port_nbr = ft_atoi(str);
+    if (aux->port_nbr < MIN_PORT_RANGE || aux->port_nbr > MAX_PORT_RANGE)
+    {
+        printf("Error: '%s' needs to be between port ranges %i - %i \n",str, MIN_PORT_RANGE, MAX_PORT_RANGE);
+        free(aux);
+        return 0;
     }
 
+    ft_lstadd_back(lst,ft_lstnew(aux));
+    return 1;
+
+}
+
+static int extract_ports(t_params *params, char* str)
+{
+    t_list **lst_ports = ft_calloc(1,sizeof(t_list*));
+    char **ports = NULL;
+    int error = 0;
+
+    ports = ft_split(str,',');
+    for(int i = 0; ports[i] != NULL && error == 0; i++)
+    {
+        if (ft_strchr(ports[i],'-'))
+        {
+            if (!add_port_range(lst_ports,ports[i]))
+            {
+                error = 1;
+                break;
+            }
+        }
+        else
+        {
+            if (!create_port(lst_ports,ports[i]))
+            {
+                error = 1;
+                break;
+            }
+        }
+    }
+    params->ports = lst_ports;
+    
     for(int i = 0; ports[i] != NULL; i++)
         free(ports[i]);
     free(ports);
 
-    return lst_ports;
+    return !error;
 
 }
 
 t_list **default_ports(void)
 {
     t_list **lst_ports = ft_calloc(1,sizeof(t_list*));
-    t_port *aux;
 
-    aux = create_port("0-1023");
-    if (aux)
-        ft_lstadd_back(lst_ports,ft_lstnew(aux));
+    if (!add_port_range(lst_ports,"0-1023"))
+    {
+        free(lst_ports);
+        return NULL;
+    }
 
     return lst_ports;
 }
 
-static t_list **extract_ip_lists(char *filename)
+static t_list *extract_ip_lists(char *filename)
 {
-    t_list **lst_ips = ft_calloc(1,sizeof(t_list*));
-    char *aux;
+    t_list *lst_ips = NULL;
+    char *aux,*aux2;
     int fd;
 
     fd = open(filename, O_RDONLY);
@@ -158,12 +189,23 @@ static t_list **extract_ip_lists(char *filename)
     aux = get_next_line(fd);    
     while (aux)
     {
-        ft_lstadd_back(lst_ips,ft_lstnew(aux));
+        aux2 = ft_strtrim(aux, " \t\r\n");
+        free(aux);
+        ft_lstadd_back(&lst_ips,ft_lstnew(aux2));
         aux = get_next_line(fd);
     }
     close(fd);
     return lst_ips;
 
+}
+
+
+static t_list *extract_ip(char *ip)
+{
+    printf("LEEO IP\n");
+    if (!ip)
+        return NULL;
+    return ft_lstnew(ft_strdup(ip));
 }
 
 static t_scan get_scan(char *str)
@@ -206,15 +248,18 @@ static t_list **extract_scan(char *str)
 }
 
 //fucntions related to each flag
-void apply_help(t_flag *flag, t_params *params)
+int apply_help(t_flag *flag, t_params *params)
 {
     (void)flag;
     params->help = true;
+    return 1;
 }
 
-void apply_ports(t_flag *flag, t_params *params)
+int apply_ports(t_flag *flag, t_params *params)
 {
-    params->ports = extract_ports(flag->value.str_value);
+    if (!extract_ports(params,flag->value.str_value))
+        return 0;
+    return 1;
 }
 
 void not_apply_ports(t_flag *flag, t_params *params)
@@ -223,24 +268,32 @@ void not_apply_ports(t_flag *flag, t_params *params)
     params->ports = default_ports();
 }
 
-void apply_ip(t_flag *flag, t_params *params)
+int apply_ip(t_flag *flag, t_params *params)
 {
-    params->destination = ft_strdup(flag->value.str_value);
+    if (!params->ip_list)
+        params->ip_list = ft_calloc(1,sizeof(t_list*));
+    ft_lstadd_back(params->ip_list ,extract_ip(flag->value.str_value));//  ft_strdup(flag->value.str_value);
+    return 1;
 }
 
-void apply_file(t_flag *flag, t_params *params)
+int apply_file(t_flag *flag, t_params *params)
 {
-    params->ip_list = extract_ip_lists(flag->value.str_value);
+    if (!params->ip_list)
+        params->ip_list = ft_calloc(1,sizeof(t_list*));
+    ft_lstadd_back(params->ip_list ,extract_ip_lists(flag->value.str_value));
+    return 1;
 }
 
-void apply_speedup(t_flag *flag, t_params *params)
+int apply_speedup(t_flag *flag, t_params *params)
 {
     params->threads = flag->value.int_value;
+    return 1;
 }
 
-void apply_scan(t_flag *flag, t_params *params)
+int apply_scan(t_flag *flag, t_params *params)
 {
     params->scan = extract_scan(flag->value.str_value);
+    return 1;
 }
 
 

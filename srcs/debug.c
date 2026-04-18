@@ -9,10 +9,7 @@ static void print_ports(t_list *lst)
     while (lst)
     {
         p = (t_port *)lst->content;
-        if (p->range)
-            printf("PORT RANGE: %d - %d\n", p->port_min, p->port_max);
-        else
-            printf("PORT: %d\n", p->port_nbr);
+        printf("PORT: %d\n", p->port_nbr);
         lst = lst->next;
     }
 }
@@ -24,7 +21,7 @@ static void print_ips(t_list *lst)
     while (lst)
     {
         ip = (char *)lst->content;
-        printf("IP: %s", ip); // ya incluye \n
+        printf("IP: '%s'\n", ip);
         lst = lst->next;
     }
 }

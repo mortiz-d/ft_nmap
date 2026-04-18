@@ -7,6 +7,10 @@
 #define DEBUG 0
 #define NI_MAXHOST 1025
 
+#define MIN_PORT_RANGE 0
+#define MAX_PORT_RANGE 65535
+
+
 #include "../libft/lib/libft.h"
 #include "../libft/lib/get_next_line.h"
 #include "../libft/lib/flag.h"
@@ -50,16 +54,14 @@ typedef enum e_scan
 } t_scan;
 
 typedef struct s_port {
-    bool   range;
     int    port_nbr;
-    int    port_min;
-    int    port_max;
 } t_port;
 
 typedef struct s_params
 {
     // struct timeval	start_ping;
 	// struct timeval	end_ping;
+    int             error_params;
     char			*destination;   //IP
     int             threads;        //Nbr of threads to search in each port
     // char            ip_address[INET_ADDRSTRLEN];
@@ -80,9 +82,9 @@ typedef struct s_params
 // t_flag *flags_config (void);
 // void test_flag(t_flag *flag,t_params *params);
 t_list *flags_config (void);
-void apply_help(t_flag *flag, t_params *params);
-void apply_ports(t_flag *flag, t_params *params);
-void apply_ip(t_flag *flag, t_params *params);
+// void apply_help(t_flag *flag, t_params *params);
+// void apply_ports(t_flag *flag, t_params *params);
+// void apply_ip(t_flag *flag, t_params *params);
 
 
 //PARAMS
