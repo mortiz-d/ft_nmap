@@ -15,10 +15,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
-#include <netinet/ip.h> 
+#include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <sys/time.h>
-#include <netdb.h> 
+#include <netdb.h>
+#include <pthread.h>
 //Para la capa 4
 #include <netinet/tcp.h>
 
@@ -66,7 +67,7 @@ typedef struct s_params
     t_list  **filename_ip;      //list with IPs from a file
     t_list  **ports;            //list ports specified
     bool    help;
-    
+
 }	t_params;
 
 //FLAGS FUNCTIONS

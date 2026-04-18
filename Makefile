@@ -1,6 +1,6 @@
 # COLORS #
 GREEN = @echo "\033[0;32m"
-BLUE = @echo "\033[0;34m" 
+BLUE = @echo "\033[0;34m"
 PURPLE = @echo "\033[0;35m"
 CYAN = @echo "\033[0;36m"
 RESET = "\033[1;0m"
@@ -9,14 +9,14 @@ RESET = "\033[1;0m"
 SRCS =	srcs/main.c \
 		srcs/debug.c \
 		srcs/params.c \
-		srcs/flags.c 
+		srcs/flags.c
 
 # FLAGS #
 OBJS_DIR = objetos
 OBJS = $(SRCS:srcs/%.c=$(OBJS_DIR)/%.o)
 
 NAME = ft_nmap
-COMMAND = 
+COMMAND =
 
 CC = gcc
 
@@ -35,7 +35,7 @@ $(NAME): $(OBJS)
 
 $(OBJS_DIR)/%.o: srcs/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -g -c $<  -o $@
+	$(CC) $(CFLAGS) -g -c $<  -o $@ -lpthread -lpcap
 	$(CYAN) $(NAME) Object Compiled $< $(RESET)
 
 clean:
@@ -46,7 +46,7 @@ clean:
 fclean: clean
 #	@rm ./testing/files/$(NAME)
 	@rm $(NAME)
-	$(PURPLE) Cleaned $(NAME) Executable $(RESET)	
+	$(PURPLE) Cleaned $(NAME) Executable $(RESET)
 
 re: fclean all
 
@@ -55,6 +55,3 @@ test: re
 	sudo ./testing/files/test_command.sh
 
 .PHONY: all clean fclean re test
-
-
-
