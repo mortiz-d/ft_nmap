@@ -74,6 +74,7 @@ typedef struct s_params
     t_list  **scan;             //Tipo de scan
     t_list  **ip_list;      //list with IPs from a file
     t_list  **ports;            //list ports specified
+    int     n_ports;
     bool    help;
     
 }	t_params;

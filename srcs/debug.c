@@ -65,7 +65,13 @@ void debug_params(t_params *params)
 
     printf("\n--- PORTS ---\n");
     if (params->ports)
-        print_ports(*params->ports);
+    {
+        printf("Nº Ports : %i\n",params->n_ports);
+        if (params->n_ports > 20)
+            printf("To many ports to show here\n");
+        else
+            print_ports(*params->ports);
+    }
     else
         printf("No ports\n");
 
