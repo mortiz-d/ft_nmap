@@ -1,15 +1,6 @@
 #include "../lib/nmap.h"
 
-t_params *params_default_config (void)
-{
-    t_params *param = ft_calloc(sizeof(t_params), 1);
-    param->threads = 1;
-    param->destination = NULL;
-    param->scan = NULL;
-    param->ip_list = NULL;
-    param->ports = NULL;
-    return param;
-}
+
 
 void free_params(t_params *param)
 {
@@ -155,6 +146,7 @@ static int extract_ports(t_params *params, char* str)
         }
     }
     params->ports = lst_ports;
+    params->n_ports = ft_lstsize(*lst_ports);
     
     for(int i = 0; ports[i] != NULL; i++)
         free(ports[i]);
@@ -162,19 +154,6 @@ static int extract_ports(t_params *params, char* str)
 
     return !error;
 
-}
-
-t_list **default_ports(void)
-{
-    t_list **lst_ports = ft_calloc(1,sizeof(t_list*));
-
-    if (!add_port_range(lst_ports,"0-1023"))
-    {
-        free(lst_ports);
-        return NULL;
-    }
-
-    return lst_ports;
 }
 
 static t_list *extract_ip_lists(char *filename)
@@ -257,16 +236,18 @@ int apply_help(t_flag *flag, t_params *params)
 
 int apply_ports(t_flag *flag, t_params *params)
 {
+    if (params->ports)
+    {
+        ft_lstiter(*params->ports,free);
+        ft_lstclear(params->ports);
+        free (params->ports);
+    }
+
     if (!extract_ports(params,flag->value.str_value))
         return 0;
     return 1;
 }
 
-void not_apply_ports(t_flag *flag, t_params *params)
-{
-    (void)flag;
-    params->ports = default_ports();
-}
 
 int apply_ip(t_flag *flag, t_params *params)
 {
@@ -301,7 +282,7 @@ t_list *flags_config (void)
 {
     t_list *flag = NULL;
     flag = set_up_flag(flag, "--help", FLAG_NONE, apply_help,NULL);
-    flag = set_up_flag(flag, "--ports", FLAG_STRING, apply_ports,not_apply_ports);
+    flag = set_up_flag(flag, "--ports", FLAG_STRING, apply_ports,NULL);
     flag = set_up_flag(flag, "--ip", FLAG_STRING, apply_ip,NULL);
     flag = set_up_flag(flag, "--speedup", FLAG_INTEGER, apply_speedup,NULL);
     flag = set_up_flag(flag,"--file",FLAG_STRING,apply_file,NULL);
@@ -309,4 +290,13 @@ t_list *flags_config (void)
     return flag;
 }
 
-
+t_params *params_default_config (void)
+{
+    t_params *param = ft_calloc(sizeof(t_params), 1);
+    param->threads = 1;
+    param->destination = NULL;
+    param->scan = NULL;
+    param->ip_list = NULL;
+    extract_ports(param,"0-1023");
+    return param;
+}
