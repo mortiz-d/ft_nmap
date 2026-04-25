@@ -1,20 +1,43 @@
 #include "../lib/nmap.h"
+// #include <netinet/ip.h>
+// #include <netinet/tcp.h>
 
 
-int nmap(t_params *params,char * ip)
+
+int nmap(t_params *params, char *ip)
 {
-    (void)ip;
-    int sockfd;
-    int n_ports_per_thread = params->n_ports / params->threads;
-    //En esta funcion deberiamos de crear los numeros de hilos en relacion con los puertos y el ultimo hilo que se quede con el sobrante
-    printf("%i/%i = %i\n", params->n_ports , params->threads ,n_ports_per_thread);
-    sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    (void) params;
+    (void) ip;
+    struct sockaddr_in addr;
+    t_list *ports;
+    t_port *p;
+
+    ft_memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
     
-    if (sockfd < 0) {
-        fprintf(stderr, "Crap\n");
+    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
+    {
+        printf("Invalid IP\n");
         return 0;
     }
-    
-    close(sockfd);
+
+    ports = *params->ports;
+
+    while (ports)
+    {
+        p = ports->content;
+
+        printf("Scanning port %d...\n", p->port_nbr);
+
+        scan_tcp(params,SYN_SCAN, addr, p->port_nbr);
+
+        ports = ports->next;
+        break;
+    }
+
     return 1;
 }
+
+//___________________________________________________________________________________________________
+//___________________________________________________________________________________________________
+//___________________________________________________________________________________________________

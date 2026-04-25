@@ -5,8 +5,6 @@
 void free_params(t_params *param)
 {
 
-    if (param->destination)
-        free (param->destination);
     if (param->scan)
     {
         ft_lstiter(*param->scan,free);
@@ -181,7 +179,6 @@ static t_list *extract_ip_lists(char *filename)
 
 static t_list *extract_ip(char *ip)
 {
-    printf("LEEO IP\n");
     if (!ip)
         return NULL;
     return ft_lstnew(ft_strdup(ip));
@@ -294,9 +291,9 @@ t_params *params_default_config (void)
 {
     t_params *param = ft_calloc(sizeof(t_params), 1);
     param->threads = 1;
-    param->destination = NULL;
     param->scan = NULL;
     param->ip_list = NULL;
+    param->launch_port = 52341;
     extract_ports(param,"0-1023");
     return param;
 }

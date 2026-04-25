@@ -9,8 +9,12 @@ RESET = "\033[1;0m"
 SRCS =	srcs/main.c   \
 		srcs/debug.c  \
 		srcs/params.c \
-		srcs/scan.c \
 		srcs/dns.c \
+		srcs/tcp2.c \
+		srcs/tcp/build.c \
+		srcs/tcp/send.c \
+		srcs/tcp/recv.c \
+		srcs/socket.c \
 		srcs/nmap.c 
 
 # FLAGS #

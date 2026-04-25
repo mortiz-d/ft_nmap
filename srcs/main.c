@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     {
         return free_all(flags, params);
     }
-    debug_params(params);
+    // debug_params(params);
 
     if (params->ip_list == NULL)
     {
@@ -33,35 +33,18 @@ int main(int argc, char **argv)
     ip_selected = *params->ip_list;
     while (ip_selected)
     {
-
+        // printf("A\n");
         printf("argv->%s\n", (char *)ip_selected->content);
         aux = dns_lookup((char *)ip_selected->content);
-        printf("ip->%s\n",aux);
+        get_local_ip(aux, params->internal_ip);
+        
+        // printf("ip->%s origen->%s\n",aux,params->internal_ip);
         nmap(params,aux);
+        // printf("B\n");
         free(aux);
         ip_selected = ip_selected->next;
+        // printf("C\n");
     }
-
-    // for (int i = 1; i < argc; i++)
-    // {
-    //     if (argv[i][0] == '\0')
-    //     {
-    //         i++;
-    //         continue;
-    //     }
-        
-    //     printf("argv->%s\n",argv[i]);
-    //     //TODO:Cambiar la ip de argv a param->ip_list
-    //     
-    //     // int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    //     // if (sockfd < 0) {
-    //     //     fprintf(stderr, PING_ROOT_ERROR);
-    //     //     free(params);
-    //     //     return 1;
-    //     // }
-        
-
-    // }
-    
+    // printf("F\n");
     return free_all(flags, params);
 }

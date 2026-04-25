@@ -29,7 +29,7 @@ static void print_ips(t_list *lst)
 static char *scan_to_string(t_scan scan)
 {
     static char *names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP","UNKNOWN"};
-    if (scan >= SYN && scan <= UDP)
+    if (scan >= SYN_SCAN && scan <= UDP_SCAN)
         return names[scan];
     return names[6];
 }
@@ -49,9 +49,6 @@ static void print_scans(t_list *lst)
 void debug_params(t_params *params)
 {
     printf("======= PARAMS DEBUG =======\n");
-
-    if (params->destination)
-        printf("Destination: %s\n", params->destination);
         
     printf("\n--- HELP ---\n");
     if (params->help)
@@ -88,4 +85,52 @@ void debug_params(t_params *params)
         printf("No scans\n");
 
     printf("======= END DEBUG =======\n");
+}
+
+void debug_tcp_header(struct tcphdr *tcp)
+{
+    printf("---- TCP HEADER DEBUG ----\n");
+
+    printf("Source Port: %u\n", ntohs(tcp->source));
+    printf("Dest Port: %u\n", ntohs(tcp->dest));
+
+    printf("Sequence Number: %u\n", ntohl(tcp->seq));
+    printf("Ack Number: %u\n", ntohl(tcp->ack_seq));
+
+    printf("Data Offset: %u (%u bytes)\n", tcp->doff, tcp->doff * 4);
+
+    printf("Flags:\n");
+    printf("  SYN: %u\n", tcp->syn);
+    printf("  ACK: %u\n", tcp->ack);
+    printf("  FIN: %u\n", tcp->fin);
+    printf("  RST: %u\n", tcp->rst);
+    printf("  PSH: %u\n", tcp->psh);
+    printf("  URG: %u\n", tcp->urg);
+
+    printf("Window Size: %u\n", ntohs(tcp->window));
+    printf("Checksum: %u\n", ntohs(tcp->check));
+
+    printf("---------------------------\n");
+}
+
+void debug_ip_header(struct iphdr *ip)
+{
+    struct in_addr saddr, daddr;
+
+    saddr.s_addr = ip->saddr;
+    daddr.s_addr = ip->daddr;
+
+    printf("---- IP HEADER DEBUG ----\n");
+    printf("Version: %d\n", ip->version);
+    printf("IHL: %d (%d bytes)\n", ip->ihl, ip->ihl * 4);
+    printf("TOS: %d\n", ip->tos);
+    printf("Total Length: %d\n", ntohs(ip->tot_len));
+    printf("ID: %d\n", ntohs(ip->id));
+    printf("Fragment Offset: %d\n", ip->frag_off);
+    printf("TTL: %d\n", ip->ttl);
+    printf("Protocol: %d\n", ip->protocol);
+    printf("Checksum: %d\n", ip->check);
+    printf("Source IP: %s\n", inet_ntoa(saddr));
+    printf("Dest IP: %s\n", inet_ntoa(daddr));
+    printf("--------------------------\n");
 }
