@@ -9,7 +9,9 @@ RESET = "\033[1;0m"
 SRCS =	srcs/main.c \
 		srcs/debug.c \
 		srcs/params.c \
-		srcs/flags.c
+		srcs/flags.c \
+		srcs/scan.c \
+		srcs/scan_types.c
 
 # FLAGS #
 OBJS_DIR = objetos

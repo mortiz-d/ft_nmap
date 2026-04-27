@@ -8,7 +8,7 @@ int main(int argc, char **argv)
     t_params *params;
     int i;
     if (getuid()){
-        dprintf (2, "This program must be run as root, quitting\n");
+        printf ("This program must be run as root, quitting\n");
         return 0;
     }
 

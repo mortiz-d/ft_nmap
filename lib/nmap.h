@@ -1,7 +1,7 @@
 #ifndef NMAP_H
 # define NMAP_H
 
-#define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
+// #define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
 #define DEBUG 0
@@ -22,7 +22,6 @@
 #include <pthread.h>
 //Para la capa 4
 #include <netinet/tcp.h>
-
 
 typedef enum e_port_state
 {
@@ -69,6 +68,13 @@ typedef struct s_params
     bool    help;
 
 }	t_params;
+
+typedef struct s_packet{
+    int port;
+    char *ip;
+    // t_scan scan;
+    struct tcphdr header;
+} t_packet;
 
 //FLAGS FUNCTIONS
 t_flag *flags_config (void);
