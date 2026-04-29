@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 {
     (void) argv;
     t_params *params;
-    int i;
+    // int i;
     if (getuid()){
         printf ("This program must be run as root, quitting\n");
         return 0;
@@ -21,17 +21,18 @@ int main(int argc, char **argv)
     params = get_params(argc,argv);
     debug_params(params);
 
-    i = 1;
-    while (i < argc)
-    {
-        printf("%i - %s\n",i,argv[i]);
-        i++;
-    }
+    // i = 1;
+    // while (i < argc)
+    // {
+    //     printf("%i - %s\n",i,argv[i]);
+    //     i++;
+    // }
 
     printf("Starting ft_nmap\n");
     //logica
 
+    main_scan_logic(params);
+    printf("ft_nmap done: %i IP address (%i host up) scanned in %.2f seconds\n", 1, 1, 1.23);
     free_params(params);
-    printf("ft_nmap done: %i IP address (%i host up) scanned in %.2f seconds", 1, 1, 1.23);
     return 0;
 }

@@ -8,7 +8,7 @@ t_params *params_default_config (void)
     param->scan = NULL;
     param->filename_ip = NULL;
     param->ports = NULL;
-    
+
     return param;
 }
 
@@ -24,12 +24,12 @@ t_params *get_params (int argc, char **argv)
 
     if (!process_flags(argc, argv, flag))
     {
-        ft_flagclear(&flag);
+        // ft_flagclear(&flag);
         printf("ERROR WITH FLAGS\n");
         return (0);
     }
     test_flag(flag,params);
-    ft_flagclear(&flag);
+    // ft_flagclear(&flag);
     free(flag);
 
     return params;

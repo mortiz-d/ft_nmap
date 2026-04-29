@@ -11,6 +11,7 @@ SRCS =	srcs/main.c \
 		srcs/params.c \
 		srcs/flags.c \
 		srcs/scan.c \
+		srcs/pck_capture.c \
 		srcs/scan_types.c
 
 # FLAGS #
@@ -31,7 +32,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@make -C ./libft
 #
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A)
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A) -lpthread -lpcap #-fsanitize=address
 	$(BLUE) $(NAME) set Up $(RESET)
 #	mv ./$(NAME) ./testing/files/$(NAME)
 

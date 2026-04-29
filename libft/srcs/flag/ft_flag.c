@@ -21,7 +21,7 @@ int	ft_flagsize(t_flag *lst)
 	{
 		count = 1;
 		while (lst->next != 0)
-		{	
+		{
 			lst = lst->next;
 			count++;
 		}
@@ -162,7 +162,7 @@ int is_exact_flag_word(char *str, char *cmp)
 	if (ft_strncmp(str,cmp,ft_strlen(cmp)) == 0 && ft_strlen(str) == ft_strlen(cmp))
 		return (1);
 	return (0);
-} 
+}
 
 t_argument *get_flag_value(t_flag *start_flag, char *c)
 {
@@ -172,7 +172,7 @@ t_argument *get_flag_value(t_flag *start_flag, char *c)
 	if (!aux)
 		return (NULL);
 
-	
+
 	return (aux->argument);
 
 }
@@ -245,7 +245,7 @@ int valid_argument(char *str,t_flag *flag,enum flag_type type ,int max_range, in
 		flag->argument->i = ft_atoi(str);
 		return (1);
 	}
-	
+
 	if (type == FLAG_CHAR)
 	{
 		if (ft_strlen(str) == 1)
@@ -302,7 +302,7 @@ int process_flags(int argc, char **argv, t_flag *flag)
 				}
 				else
 					return 0;
-				
+
 			}
 
 		}

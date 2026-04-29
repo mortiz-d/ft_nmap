@@ -1,7 +1,10 @@
 #ifndef NMAP_H
 # define NMAP_H
 
-// #define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
+
+#define _DEFAULT_SOURCE
+#define _GNU_SOURCE
+
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
 #define DEBUG 0
@@ -14,14 +17,17 @@
 #include <signal.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <pcap.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
-#include <sys/time.h>
 #include <netdb.h>
 #include <pthread.h>
 //Para la capa 4
-#include <netinet/tcp.h>
 
 typedef enum e_port_state
 {
@@ -72,7 +78,7 @@ typedef struct s_params
 typedef struct s_packet{
     int port;
     char *ip;
-    // t_scan scan;
+    int scan;
     struct tcphdr header;
 } t_packet;
 
@@ -86,5 +92,12 @@ void free_params(t_params *params);
 
 //DEBUG
 void debug_params(t_params *params);
+
+//SCAN
+void main_scan_logic(t_params* args);
+
+//CAPTURE
+void capture_packets();
+
 
 #endif
