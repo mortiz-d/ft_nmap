@@ -9,8 +9,10 @@ RESET = "\033[1;0m"
 SRCS =	srcs/main.c   \
 		srcs/debug.c  \
 		srcs/params.c \
-		srcs/scan.c \
 		srcs/dns.c \
+		srcs/a_pck_capture.c \
+		srcs/a_scan_copy.c \
+		srcs/a_scan_types.c \
 		srcs/nmap.c 
 
 # FLAGS #
@@ -31,7 +33,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@make -C ./libft
 #
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A)
+	$(CC) $(CFLAGS) -lpcap -o $(NAME) $(OBJS) $(LIBFT_A)
 	$(BLUE) $(NAME) set Up $(RESET)
 #	mv ./$(NAME) ./testing/files/$(NAME)
 

@@ -156,6 +156,52 @@ static int extract_ports(t_params *params, char* str)
 
 }
 
+static t_scan get_scan(char *str)
+{
+    const char *scan_names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP"};
+    int num_scans = sizeof(scan_names) / sizeof(scan_names[0]);
+
+    for (int i = 0; i < num_scans; i++)
+    {
+        if (strcmp(str, scan_names[i]) == 0)
+            return (t_scan)i;
+    }
+
+    return SCAN_UNKNOWN;
+}
+
+static int extract_scan(t_params *params,char *str)
+{
+    t_list **lst_scans = ft_calloc(1,sizeof(t_list*));
+    char **scans = NULL;
+    t_scan *new_aux;
+    t_scan aux;
+    int error = 0;
+    
+    scans = ft_split(str,'/');
+    for(int i = 0; scans[i] != NULL; i++)
+    {
+        aux = get_scan(scans[i]);
+        new_aux = malloc(sizeof(t_scan));
+        if (!new_aux)
+        {
+            error = 1;
+            break;
+        }
+        *new_aux = aux;
+        ft_lstadd_back(lst_scans, ft_lstnew(new_aux));
+    }
+
+    params->scan = lst_scans;
+
+    for(int i = 0; scans[i] != NULL; i++)
+        free(scans[i]);
+    free(scans);
+
+    return !error;
+}
+
+
 static t_list *extract_ip_lists(char *filename)
 {
     t_list *lst_ips = NULL;
@@ -187,44 +233,6 @@ static t_list *extract_ip(char *ip)
     return ft_lstnew(ft_strdup(ip));
 }
 
-static t_scan get_scan(char *str)
-{
-    const char *scan_names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP"};
-    int num_scans = sizeof(scan_names) / sizeof(scan_names[0]);
-
-    for (int i = 0; i < num_scans; i++)
-    {
-        if (strcmp(str, scan_names[i]) == 0)
-            return (t_scan)i;
-    }
-
-    return SCAN_UNKNOWN;
-}
-
-static t_list **extract_scan(char *str)
-{
-    t_list **lst_scans = ft_calloc(1,sizeof(t_list*));
-    char **scans = NULL;
-    t_scan *new_aux;
-    t_scan aux;
-    
-    scans = ft_split(str,'/');
-    for(int i = 0; scans[i] != NULL; i++)
-    {
-        aux = get_scan(scans[i]);
-        new_aux = malloc(sizeof(t_scan));
-        if (!new_aux)
-            return NULL;
-        *new_aux = aux;
-        ft_lstadd_back(lst_scans, ft_lstnew(new_aux));
-    }
-
-    for(int i = 0; scans[i] != NULL; i++)
-        free(scans[i]);
-    free(scans);
-
-    return lst_scans;
-}
 
 //fucntions related to each flag
 int apply_help(t_flag *flag, t_params *params)
@@ -273,7 +281,15 @@ int apply_speedup(t_flag *flag, t_params *params)
 
 int apply_scan(t_flag *flag, t_params *params)
 {
-    params->scan = extract_scan(flag->value.str_value);
+    if (params->scan)
+    {
+        ft_lstiter(*params->scan,free);
+        ft_lstclear(params->scan);
+        free (params->scan);
+    }
+
+    if (!extract_scan(params,flag->value.str_value))
+        return 0;
     return 1;
 }
 
@@ -298,5 +314,6 @@ t_params *params_default_config (void)
     param->scan = NULL;
     param->ip_list = NULL;
     extract_ports(param,"0-1023");
+    extract_scan(param,"SYN");
     return param;
 }
