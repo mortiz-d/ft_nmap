@@ -11,7 +11,7 @@ int nmap(t_params *params, char *ip)
     struct sockaddr_in addr;
     t_list *ports;
     t_port *p;
-
+    
     ft_memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     
@@ -32,7 +32,6 @@ int nmap(t_params *params, char *ip)
         scan_tcp(params,SYN_SCAN, addr, p->port_nbr);
 
         ports = ports->next;
-        break;
     }
 
     return 1;

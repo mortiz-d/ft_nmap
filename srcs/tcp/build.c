@@ -1,5 +1,5 @@
 
-#include "../lib/nmap.h"
+#include "../../lib/nmap.h"
 
 unsigned short checksum(char *b, int len) {
     unsigned short *buf = (unsigned short *)b;

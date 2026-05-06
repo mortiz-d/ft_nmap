@@ -17,7 +17,7 @@
 #include "../libft/lib/get_next_line.h"
 #include "../libft/lib/flag.h"
 #include <stdio.h>
- #include <fcntl.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
@@ -26,11 +26,14 @@
 #include <netinet/ip.h> 
 #include <netinet/ip_icmp.h>
 #include <sys/time.h>
-#include <netdb.h> 
-#include <errno.h>
-
-//Para la capa 4
+#include <netdb.h>
+#include <pcap.h> 
 #include <netinet/tcp.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <pthread.h>
 
 
 typedef struct s_tcp_checksum {
@@ -77,6 +80,13 @@ typedef struct s_params
     
 }	t_params;
 
+typedef struct s_packet{
+    int port;
+    char *ip;
+    int scan;
+    struct tcphdr header;
+} t_packet;
+
 //FLAGS FUNCTIONS
 t_list *flags_config (void);
 
@@ -105,5 +115,10 @@ int socket_connection(t_params *params);
 void build_packet(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type);
 int send_packet(int sockfd, char *packet, struct sockaddr_in addr);
 ssize_t recv_packet(int sockfd, char *buffer);
+
+void main_scan_logic(t_params* args);
+
+//CAPTURE
+void capture_packets();
 
 #endif

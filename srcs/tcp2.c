@@ -20,7 +20,7 @@ int scan_tcp(t_params *params, t_scan type, struct sockaddr_in addr, int port)
     (void) buffer;
     int sockfd;
     
-
+    
     sockfd = socket_connection(params);
     if (!sockfd)
     {

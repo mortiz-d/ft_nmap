@@ -14,6 +14,8 @@ SRCS =	srcs/main.c   \
 		srcs/tcp/build.c \
 		srcs/tcp/send.c \
 		srcs/tcp/recv.c \
+		srcs/a_pck_scan.c \
+		srcs/a_pck_capture.c \
 		srcs/socket.c \
 		srcs/nmap.c 
 
@@ -35,7 +37,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@make -C ./libft
 #
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A)
+	$(CC) $(CFLAGS) -lpcap -o $(NAME) $(OBJS) $(LIBFT_A)
 	$(BLUE) $(NAME) set Up $(RESET)
 #	mv ./$(NAME) ./testing/files/$(NAME)
 
