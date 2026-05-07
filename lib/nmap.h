@@ -5,11 +5,12 @@
 #define _POSIX_C_SOURCE 200809L
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
-#define DEBUG 1
+#define DEBUG 0
 #define NI_MAXHOST 1025
 
 #define MIN_PORT_RANGE 0
 #define MAX_PORT_RANGE 65535
+#define SOURCE_PORT 52341
 #define TIMEOUT_MS 3000
 
 
@@ -77,8 +78,15 @@ typedef struct s_params
     int     n_ports;
     bool    help;
     int     launch_port;
-    
 }	t_params;
+
+
+
+typedef struct s_packet_dump
+{
+    
+}	t_packet_dump;
+
 
 typedef struct s_packet{
     int port;
@@ -119,6 +127,6 @@ ssize_t recv_packet(int sockfd, char *buffer);
 void main_scan_logic(t_params* args);
 
 //CAPTURE
-void capture_packets();
+void capture_packets(t_params *params);
 
 #endif

@@ -307,7 +307,7 @@ t_params *params_default_config (void)
     param->threads = 1;
     param->scan = NULL;
     param->ip_list = NULL;
-    param->launch_port = 52341;
+    param->launch_port = SOURCE_PORT;
     extract_ports(param,"0-1023");
     extract_scan(param,"SYN");
     return param;

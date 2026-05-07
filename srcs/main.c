@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     {
         return free_all(flags, params);
     }
-    debug_params(params);
+    // debug_params(params);
 
     if (params->ip_list == NULL)
     {

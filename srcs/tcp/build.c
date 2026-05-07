@@ -75,8 +75,8 @@ void build_packet(char *packet, t_params *params, struct sockaddr_in addr, int p
     ft_memset(packet, 0, 4096);
 
     build_ip_header(params, ip, addr);
-    debug_ip_header(ip);
+    // debug_ip_header(ip);
     build_tcp_header(params,tcp, port, type);
-    debug_tcp_header(tcp);
+    // debug_tcp_header(tcp);
     compute_tcp_checksum(ip, tcp); //(Tanto rollo para hacer el checksum :v )
 }

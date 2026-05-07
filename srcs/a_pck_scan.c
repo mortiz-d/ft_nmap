@@ -64,15 +64,9 @@ void *send_scans(void *args){
     t_params *params = (t_params *)args;
     struct sockaddr_in addr;
     t_list *ips = *params->ip_list;
-    char *ip = NULL;
-
-    
-    
-    // t_list *ports = NULL;
-    // int port = 0;
-
     t_list *scans = NULL;
     t_scan *scan = NULL;
+    char *ip = NULL;
 
     while (ips){
         ip = (char *)ips->content;
@@ -87,7 +81,7 @@ void *send_scans(void *args){
             continue;
         }
 
-        printf("Valid IP -> %s\n", ip);
+        // printf("Valid IP -> %s\n", ip);
 
         // aux = ;
         get_local_ip(dns_lookup(ip), params->internal_ip);
@@ -109,10 +103,11 @@ void *send_scans(void *args){
     return NULL;
 }
 
+//Este hilo ira recogiendo todos los 
 void *receive_scans(void *args){
     t_params *params = (t_params *)args;
-    (void)params; //QUITAR, es para que se calle el unused variable
-    capture_packets();
+    (void)params; //QUITAR, es para que se calle el unused variable | NOT ANYMORE (mortiz)
+    capture_packets(params);
     //usar la libreria pcap para capturar paquetes
     return NULL;
 }
@@ -122,10 +117,11 @@ void main_scan_logic(t_params* args){
     pthread_t receiver_thread;
 
     //puede haber N sender threads
-    printf("THE SENDER?\n");
-    pthread_create(&sender_thread, NULL, send_scans, args);
-    printf("THE RECEIVER?\n");
     pthread_create(&receiver_thread, NULL, receive_scans, args);
+    sleep(1);
+    pthread_create(&sender_thread, NULL, send_scans, args);
+
+
     printf("?\n");
     pthread_join(sender_thread, NULL);
     printf("1?\n");
