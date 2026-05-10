@@ -23,6 +23,12 @@ void free_params(t_params *param)
         ft_lstclear(param->ports);
         free (param->ports);
     }
+    if (param->results)
+    {
+        ft_lstiter(*param->results,free);
+        ft_lstclear(param->results);
+        free (param->results);
+    }
     free(param);
     return;
 }
@@ -91,6 +97,83 @@ static int add_port_range(t_list **lst, char* str )
     return created;
 }
 
+void reset_resutls_field(t_result_scan * r_scan, t_list *scans)
+{
+    t_scan *scan;
+    r_scan->syn = PORT_UNCALLED;
+    r_scan->nul = PORT_UNCALLED;
+    r_scan->ack = PORT_UNCALLED;
+    r_scan->fin = PORT_UNCALLED;
+    r_scan->xmas = PORT_UNCALLED;
+    r_scan->udp = PORT_UNCALLED;
+    while (scans){
+        scan = (t_scan *)scans->content;
+        switch (*scan)
+        {
+            case SYN_SCAN:
+                r_scan->syn = PORT_FILTERED;
+            break;
+            case NUL_SCAN:
+                r_scan->nul = PORT_CLOSED;
+            break;
+            case ACK_SCAN:
+                r_scan->ack = PORT_FILTERED;
+            break;
+            case FIN_SCAN:
+                r_scan->fin = PORT_OPENFILTERED;
+            break;
+            case XMAS_SCAN:
+                r_scan->xmas = PORT_OPENFILTERED;
+                break;
+            case UDP_SCAN:
+                r_scan->xmas = PORT_UNKNOWN;
+                break;
+            
+        
+            default:
+                break;
+        }
+        
+        scans = scans->next;
+    }
+
+}
+
+void reset_all_results(t_list **results, t_list *scans)
+{
+    t_list *res;
+    t_result_scan *r_scan;
+
+    res = *results;
+
+    while (res)
+    {
+        r_scan = (t_result_scan *)res->content;
+        reset_resutls_field(r_scan, scans);
+        res = res->next;
+    }
+}
+
+void generate_result_table(t_params *params)
+{
+    t_list **lst_res = ft_calloc(1,sizeof(t_list*));
+    t_list *ports = NULL;
+    t_port *port = NULL;
+    t_result_scan *aux;
+    
+
+    ports = *(params->ports);
+    while (ports){
+
+        aux = ft_calloc(1,sizeof(t_result_scan));
+        port = (t_port *)ports->content;
+        aux->port_nbr = port->port_nbr;
+        reset_resutls_field(aux,*(params->scan));
+        ft_lstadd_back(lst_res, ft_lstnew(aux));
+        ports = ports->next;
+    }
+    params->results = lst_res;
+}
 
 static t_scan get_scan(char *str)
 {
@@ -309,6 +392,8 @@ t_params *params_default_config (void)
     param->ip_list = NULL;
     param->launch_port = SOURCE_PORT;
     extract_ports(param,"0-1023");
-    extract_scan(param,"SYN");
+    extract_scan(param,"SYN/NUL/FIN/XMAS/ACK");
+    // extract_scan(param,"ACK");
+    
     return param;
 }

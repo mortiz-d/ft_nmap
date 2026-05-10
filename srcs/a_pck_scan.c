@@ -15,7 +15,7 @@ uint16_t calculate_checksum(void *data, int len) {
     return result;
 }
 
-
+//Desechar probablemente
 void fill_packet_tcp(t_packet *pck, int port, char *ip, int scan){
     ft_bzero(pck, sizeof(*pck));
     pck->header.th_dport = htons(port);
@@ -48,11 +48,10 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
         return;
     }
     ft_bzero(packet, sizeof(packet));
-    printf("Socket creado para puerto %i\n",port);
+    // printf("Socket creado para puerto %i\n",port);
     // (char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type)
     build_packet(packet,params,addr,port,scan);
     // build_packet(packet, params, addr, port, type);
-    printf("DEBUG dst = %s\n", inet_ntoa(addr.sin_addr));
     send_packet(sockfd, packet, addr);
     // recv_packet(sockfd,buffer);
   
@@ -60,46 +59,73 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
     return;
 }
 
-void *send_scans(void *args){
+// void *send_scans(void *args){
+//     t_params *params = (t_params *)args;
+//     struct sockaddr_in addr;
+//     // t_list *ips = *params->ip_list;
+//     // t_list *scans = NULL;
+//     // t_scan *scan = NULL;
+//     t_list *ports = NULL;
+//     t_port *port = NULL;
+//     // printf("BOOM! %s\n",params->active_ip);
+//     char *ip = params->active_ip;
+
+//     ft_memset(&addr, 0, sizeof(addr));
+
+//     addr.sin_family = AF_INET;
+
+//     if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
+//     {
+//         printf("Invalid IP -> %s\n", ip);
+//         return NULL;
+//     }
+//     get_local_ip(dns_lookup(ip), params->internal_ip);
+    
+        
+//     ports = *(params->ports);
+//     while (ports){
+//         port = (t_port *)ports->content;
+//         // printf("sending to ip = %s port = %i\n",ip,port->port_nbr);
+//         scan_port(params,addr, port->port_nbr, params->active_scan);
+//         ports = ports->next;
+//     }
+//     //mandar todos los paquetes sin esperar
+//     return NULL;
+// }
+
+void *send_scans(void *args)
+{
     t_params *params = (t_params *)args;
     struct sockaddr_in addr;
-    t_list *ips = *params->ip_list;
-    t_list *scans = NULL;
-    t_scan *scan = NULL;
-    char *ip = NULL;
+    t_list *ports;
+    t_port *port;
 
-    while (ips){
-        ip = (char *)ips->content;
-        ft_memset(&addr, 0, sizeof(addr));
+    ft_memset(&addr, 0, sizeof(addr));
 
-        addr.sin_family = AF_INET;
+    addr.sin_family = AF_INET;
 
-        if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
-        {
-            printf("Invalid IP -> %s\n", ip);
-            ips = ips->next;
-            continue;
-        }
-
-        // printf("Valid IP -> %s\n", ip);
-
-        // aux = ;
-        get_local_ip(dns_lookup(ip), params->internal_ip);
-        
-        // ports = *(params->ports);
-        // for (; ports; ports = ports->next){
-        //     port = (int)ports->content;
-        // }
-        scans = *params->scan;
-        while (scans){
-            scan = (t_scan *)scans->content;
-            printf("sending to ip = %s scan = %i\n",ip,*scan);
-            scan_port(params,addr, 80, *scan);
-            scans = scans->next;
-        }
-        ips = ips->next;
+    if (inet_pton(AF_INET,
+                  params->active_ip,
+                  &addr.sin_addr) <= 0)
+    {
+        printf("Invalid IP -> %s\n", params->active_ip);
+        return NULL;
     }
-    //mandar todos los paquetes sin esperar
+
+    ports = *(params->ports);
+
+    while (ports)
+    {
+        port = (t_port *)ports->content;
+
+        scan_port(params,
+                  addr,
+                  port->port_nbr,
+                  params->active_scan);
+
+        ports = ports->next;
+    }
+
     return NULL;
 }
 
@@ -112,21 +138,95 @@ void *receive_scans(void *args){
     return NULL;
 }
 
+static const char *port_state_str(t_port_state state)
+{
+    switch (state)
+    {
+        case PORT_OPEN:
+            return "OPEN";
+            break;
+        case PORT_CLOSED:
+            return "CLOSED";
+            break;
+        case PORT_FILTERED:
+            return "FILTERED";
+            break;
+        case PORT_UNFILTERED:
+            return "UNFILTERED";
+            break; 
+        case PORT_UNCALLED:
+            return "----------";
+            break;
+        case PORT_OPENFILTERED:
+            return "OP|FILT";
+            break;
+        
+        
+        default:
+            break;
+    }
+    return "UNKNOWN";
+}
+
+void print_result_table(t_list *lst)
+{
+    t_result_scan *s;
+
+    printf("\n");
+    printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+    printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
+    printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+
+    while (lst)
+    {
+        s = (t_result_scan *)lst->content;
+
+        printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",s->port_nbr,port_state_str(s->syn),port_state_str(s->nul),port_state_str(s->fin),port_state_str(s->xmas),port_state_str(s->ack),port_state_str(s->udp));
+        lst = lst->next;
+    }
+
+    printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+}
+
+// static void clean_result_table(t_list *lst)
+// {
+//     t_result_scan *s;
+//     while (lst)
+//     {
+//         s = (t_result_scan *)lst->content;
+//         s->syn = PORT_UNKNOWN; 
+//         s->nul = PORT_UNKNOWN;
+//         s->fin = PORT_UNKNOWN;
+//         s->xmas= PORT_UNKNOWN; 
+//         s->ack = PORT_UNKNOWN;
+//         s->udp = PORT_UNKNOWN;
+//         lst = lst->next;
+//     }
+// }
+
 void main_scan_logic(t_params* args){
     pthread_t sender_thread;
     pthread_t receiver_thread;
 
-    //puede haber N sender threads
-    pthread_create(&receiver_thread, NULL, receive_scans, args);
-    sleep(1);
-    pthread_create(&sender_thread, NULL, send_scans, args);
+    t_list *scans = NULL;
+    scans = *args->scan;
 
+    while (scans)
+    {
+        ((t_params *)args)->active_scan = *(t_scan *)scans->content;
+        pthread_create(&receiver_thread, NULL, receive_scans, args);
+        sleep(1);
+        pthread_create(&sender_thread, NULL, send_scans, args);
 
-    printf("?\n");
-    pthread_join(sender_thread, NULL);
-    printf("1?\n");
-    pthread_join(receiver_thread, NULL);
-    printf("2?\n");
+        pthread_join(sender_thread, NULL);
+        pthread_join(receiver_thread, NULL);
+        
+        scans = scans->next;
+        break;
+    }
+    print_result_table(*args->results);
+    reset_all_results(args->results, *args->scan);
+    // clean_result_table(*args->results);
 }
 /*
 void test_tcp(){

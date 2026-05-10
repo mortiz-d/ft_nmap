@@ -50,16 +50,19 @@ typedef enum e_port_state
     PORT_UNKNOWN,
     PORT_OPEN,
     PORT_CLOSED,
-    PORT_FILTERED
+    PORT_FILTERED,
+    PORT_UNFILTERED,
+    PORT_OPENFILTERED,
+    PORT_UNCALLED
 } t_port_state;
 
 typedef enum e_scan
 {
-    SYN_SCAN,
-    NUL_SCAN,
-    FIN_SCAN,
-    XMAS_SCAN,
-    ACK_SCAN,
+    SYN_SCAN, //SYN-ACK signal = Port open | RST signal = port closed | No anwser = filtered
+    NUL_SCAN, //No anwser = Port closed | RST signal  = port open
+    FIN_SCAN, //No anwser = Port open/filtered | RST signal = port closed
+    XMAS_SCAN,//No anwser = Port open/filtered | RST signal = port closed
+    ACK_SCAN, //No anwser = filtered | RST signal = unfiltered
     UDP_SCAN,
     SCAN_UNKNOWN
 } t_scan;
@@ -75,19 +78,35 @@ typedef struct s_params
     t_list  **scan;             //Tipo de scan
     t_list  **ip_list;      //list with IPs from a file
     t_list  **ports;            //list ports specified
+    t_list  **results;
     int     n_ports;
     bool    help;
     int     launch_port;
+    t_scan  active_scan;
+    char	*active_ip;   //IP currently scanning
+
+
 }	t_params;
 
 
-
-typedef struct s_packet_dump
-{
+// typedef struct s_result_scan_list
+// {
     
-}	t_packet_dump;
+// }	t_result_scan_list;
+
+typedef struct s_result_scan
+{
+    int    port_nbr;
+    t_port_state syn;
+    t_port_state nul;
+    t_port_state fin;
+    t_port_state xmas;
+    t_port_state ack;
+    t_port_state udp;
+}	t_result_scan;
 
 
+//Probablemente innecesario si consigo filtrar que es que
 typedef struct s_packet{
     int port;
     char *ip;
@@ -114,6 +133,8 @@ int nmap(t_params *params,char * str);
 
 char *dns_lookup(char *host);
 int get_local_ip(char *dest_ip, char *out_ip);
+void generate_result_table(t_params *params);
+void reset_all_results(t_list **results, t_list *scans);
 
 unsigned short checksum(char *b, int len);
 int scan_tcp(t_params *params, t_scan type, struct sockaddr_in addr, int port);

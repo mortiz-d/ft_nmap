@@ -25,6 +25,8 @@ int main(int argc, char **argv)
     {
         return free_all(flags, params);
     }
+
+    generate_result_table(params);
     // debug_params(params);
 
     if (params->ip_list == NULL)
@@ -34,23 +36,22 @@ int main(int argc, char **argv)
     }
 
     
-    main_scan_logic(params);
+    // main_scan_logic(params);
 
-    // ip_selected = *params->ip_list;
-    // while (ip_selected)
-    // {
-    //     // printf("A\n");
-    //     printf("argv->%s\n", (char *)ip_selected->content);
-    //     aux = dns_lookup((char *)ip_selected->content);
-    //     get_local_ip(aux, params->internal_ip);
-        
-    //     // printf("ip->%s origen->%s\n",aux,params->internal_ip);
-    //     nmap(params,aux);
-    //     // printf("B\n");
-    //     free(aux);
-    //     ip_selected = ip_selected->next;
-    //     // printf("C\n");
-    // }
-    // printf("F\n");
+
+    ip_selected = *params->ip_list;
+    while (ip_selected)
+    {
+        // printf("A\n");
+        printf("argv->%s\n", (char *)ip_selected->content);
+        aux = dns_lookup((char *)ip_selected->content);
+        get_local_ip(aux, params->internal_ip);
+        params->active_ip = aux;
+        main_scan_logic(params);
+        free(aux);
+        ip_selected = ip_selected->next;
+        // printf("C\n");
+    }
+    printf("F\n");
     return free_all(flags, params);
 }

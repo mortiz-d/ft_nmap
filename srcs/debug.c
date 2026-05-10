@@ -46,6 +46,8 @@ static void print_scans(t_list *lst)
     }
 }
 
+
+
 void debug_params(t_params *params)
 {
     printf("======= PARAMS DEBUG =======\n");
