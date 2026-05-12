@@ -53,9 +53,10 @@ void build_ip_header(t_params *params,struct iphdr *ip, struct sockaddr_in dst)
 
 void build_tcp_header(t_params *params,struct tcphdr *tcp, int port, t_scan type)
 {
+    (void) params;
     ft_memset(tcp, 0, sizeof(struct tcphdr));
 
-    tcp->source = htons(params->launch_port);   //From what port originates
+    tcp->source = htons(SOURCE_PORT);   //From what port originates
     tcp->dest = htons(port);                    //Destiny port
     tcp->seq = htonl(1);                   //Nº sequence
     tcp->ack_seq = 0;                           
@@ -63,18 +64,19 @@ void build_tcp_header(t_params *params,struct tcphdr *tcp, int port, t_scan type
 
     if (type == SYN_SCAN) 
         tcp->syn = 1;       //This activates the SYN flag
-
-    if (type == FIN_SCAN) 
-        tcp->fin = 1;       //This activates the FIN flag
-    
-    if (type == XMAS_SCAN)
+    else if (type == FIN_SCAN)
     {
+        printf("FIN activated\n");
+        tcp->fin = 1;       //This activates the FIN flag
+    }
+    else if (type == XMAS_SCAN)
+    {
+        printf("XMAS activated\n");
         tcp->psh = 1;
         tcp->fin = 1; 
         tcp->urg = 1;
     }
-
-    if (type == ACK_SCAN)
+    else if (type == ACK_SCAN)
     {
         tcp->ack = 1;
     }

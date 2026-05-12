@@ -81,9 +81,11 @@ typedef struct s_params
     t_list  **results;
     int     n_ports;
     bool    help;
-    int     launch_port;
+    // int     launch_port;
     t_scan  active_scan;
     char	*active_ip;   //IP currently scanning
+    int     n_packet_sended;
+    int     n_packet_recieved;
 
 
 }	t_params;

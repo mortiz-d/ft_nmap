@@ -214,6 +214,9 @@ void main_scan_logic(t_params* args){
     while (scans)
     {
         ((t_params *)args)->active_scan = *(t_scan *)scans->content;
+        printf("Swiched to another scan %i \n", *(t_scan *)scans->content);
+        
+
         pthread_create(&receiver_thread, NULL, receive_scans, args);
         sleep(1);
         pthread_create(&sender_thread, NULL, send_scans, args);
@@ -222,7 +225,6 @@ void main_scan_logic(t_params* args){
         pthread_join(receiver_thread, NULL);
         
         scans = scans->next;
-        break;
     }
     print_result_table(*args->results);
     reset_all_results(args->results, *args->scan);

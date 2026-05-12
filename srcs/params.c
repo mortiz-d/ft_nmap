@@ -100,6 +100,7 @@ static int add_port_range(t_list **lst, char* str )
 void reset_resutls_field(t_result_scan * r_scan, t_list *scans)
 {
     t_scan *scan;
+    // r_scan->confirm_sended = 0;
     r_scan->syn = PORT_UNCALLED;
     r_scan->nul = PORT_UNCALLED;
     r_scan->ack = PORT_UNCALLED;
@@ -390,7 +391,6 @@ t_params *params_default_config (void)
     param->threads = 1;
     param->scan = NULL;
     param->ip_list = NULL;
-    param->launch_port = SOURCE_PORT;
     extract_ports(param,"0-1023");
     extract_scan(param,"SYN/NUL/FIN/XMAS/ACK");
     // extract_scan(param,"ACK");
