@@ -10,14 +10,12 @@ SRCS =	srcs/main.c   \
 		srcs/debug.c  \
 		srcs/params.c \
 		srcs/dns.c \
-		srcs/tcp2.c \
 		srcs/tcp/build.c \
 		srcs/tcp/send.c \
 		srcs/tcp/recv.c \
 		srcs/a_pck_scan.c \
 		srcs/a_pck_capture.c \
-		srcs/socket.c \
-		srcs/nmap.c 
+		srcs/socket.c 
 
 # FLAGS #
 OBJS_DIR = objetos

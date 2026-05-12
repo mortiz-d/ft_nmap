@@ -59,40 +59,6 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
     return;
 }
 
-// void *send_scans(void *args){
-//     t_params *params = (t_params *)args;
-//     struct sockaddr_in addr;
-//     // t_list *ips = *params->ip_list;
-//     // t_list *scans = NULL;
-//     // t_scan *scan = NULL;
-//     t_list *ports = NULL;
-//     t_port *port = NULL;
-//     // printf("BOOM! %s\n",params->active_ip);
-//     char *ip = params->active_ip;
-
-//     ft_memset(&addr, 0, sizeof(addr));
-
-//     addr.sin_family = AF_INET;
-
-//     if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0)
-//     {
-//         printf("Invalid IP -> %s\n", ip);
-//         return NULL;
-//     }
-//     get_local_ip(dns_lookup(ip), params->internal_ip);
-    
-        
-//     ports = *(params->ports);
-//     while (ports){
-//         port = (t_port *)ports->content;
-//         // printf("sending to ip = %s port = %i\n",ip,port->port_nbr);
-//         scan_port(params,addr, port->port_nbr, params->active_scan);
-//         ports = ports->next;
-//     }
-//     //mandar todos los paquetes sin esperar
-//     return NULL;
-// }
-
 void *send_scans(void *args)
 {
     t_params *params = (t_params *)args;
@@ -187,22 +153,6 @@ void print_result_table(t_list *lst)
 
     printf("+--------+------------+------------+------------+------------+------------+------------+\n");
 }
-
-// static void clean_result_table(t_list *lst)
-// {
-//     t_result_scan *s;
-//     while (lst)
-//     {
-//         s = (t_result_scan *)lst->content;
-//         s->syn = PORT_UNKNOWN; 
-//         s->nul = PORT_UNKNOWN;
-//         s->fin = PORT_UNKNOWN;
-//         s->xmas= PORT_UNKNOWN; 
-//         s->ack = PORT_UNKNOWN;
-//         s->udp = PORT_UNKNOWN;
-//         lst = lst->next;
-//     }
-// }
 
 void main_scan_logic(t_params* args){
     pthread_t sender_thread;

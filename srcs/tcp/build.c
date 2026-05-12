@@ -66,12 +66,10 @@ void build_tcp_header(t_params *params,struct tcphdr *tcp, int port, t_scan type
         tcp->syn = 1;       //This activates the SYN flag
     else if (type == FIN_SCAN)
     {
-        printf("FIN activated\n");
         tcp->fin = 1;       //This activates the FIN flag
     }
     else if (type == XMAS_SCAN)
     {
-        printf("XMAS activated\n");
         tcp->psh = 1;
         tcp->fin = 1; 
         tcp->urg = 1;
@@ -80,13 +78,6 @@ void build_tcp_header(t_params *params,struct tcphdr *tcp, int port, t_scan type
     {
         tcp->ack = 1;
     }
-
-    // tcp->syn = 0;
-    // tcp->rst = 0;
-    // tcp->psh = 0;
-    // tcp->ack = 0;
-    // tcp->urg = 0;
-
 
     tcp->window = htons(5840); //Buffer in bytes BEFORE recieving ACK, see https://en.wikipedia.org/wiki/TCP_window_scale_option
     tcp->check = 0;  // Checksum (Will be put later)
