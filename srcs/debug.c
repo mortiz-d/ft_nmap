@@ -136,3 +136,15 @@ void debug_ip_header(struct iphdr *ip)
     printf("Dest IP: %s\n", inet_ntoa(daddr));
     printf("--------------------------\n");
 }
+
+#include <netinet/udp.h>
+
+void debug_udp_header(struct udphdr *udp)
+{
+    printf("\n========== UDP HEADER ==========\n");
+    printf("Src Port : %d\n", ntohs(udp->source));
+    printf("Dst Port : %d\n", ntohs(udp->dest));
+    printf("Length   : %d\n", ntohs(udp->len));
+    printf("Checksum : 0x%x\n", ntohs(udp->check));
+    printf("================================\n\n");
+}

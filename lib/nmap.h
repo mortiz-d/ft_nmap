@@ -10,6 +10,7 @@
 
 #define MIN_PORT_RANGE 0
 #define MAX_PORT_RANGE 65535
+#define UDP_DEFAULT_BASE_PORT 33434
 #define SOURCE_PORT 52341
 #define TIMEOUT_MS 3000
 
@@ -35,6 +36,7 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <netinet/udp.h>
 
 
 typedef struct s_tcp_checksum {
@@ -63,7 +65,7 @@ typedef enum e_scan
     FIN_SCAN, //No anwser = Port open/filtered | RST signal = port closed
     XMAS_SCAN,//No anwser = Port open/filtered | RST signal = port closed
     ACK_SCAN, //No anwser = filtered | RST signal = unfiltered
-    UDP_SCAN,
+    UDP_SCAN, //No anwser = Port open/filtered | ICMP type 3 code 3 = closed | UDP response = open
     SCAN_UNKNOWN
 } t_scan;
 
@@ -81,7 +83,6 @@ typedef struct s_params
     t_list  **results;
     int     n_ports;
     bool    help;
-    // int     launch_port;
     t_scan  active_scan;
     char	*active_ip;   //IP currently scanning
     int     n_packet_sended;
@@ -89,12 +90,6 @@ typedef struct s_params
 
 
 }	t_params;
-
-
-// typedef struct s_result_scan_list
-// {
-    
-// }	t_result_scan_list;
 
 typedef struct s_result_scan
 {
@@ -130,6 +125,7 @@ void free_params(t_params *params);
 void debug_params(t_params *params);
 void debug_ip_header(struct iphdr *ip);
 void debug_tcp_header(struct tcphdr *tcp);
+void debug_udp_header(struct udphdr *udp);
 
 int nmap(t_params *params,char * str);
 
@@ -138,14 +134,18 @@ int get_local_ip(char *dest_ip, char *out_ip);
 void generate_result_table(t_params *params);
 void reset_all_results(t_list **results, t_list *scans);
 
-unsigned short checksum(char *b, int len);
-int scan_tcp(t_params *params, t_scan type, struct sockaddr_in addr, int port);
-int socket_connection(t_params *params);
 
 //TCP (BUILD -> SEND -> RECIEVE -> PROCESS)
-void build_packet(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type);
-int send_packet(int sockfd, char *packet, struct sockaddr_in addr);
-ssize_t recv_packet(int sockfd, char *buffer);
+int socket_connection_tcp(t_params *params);
+void build_packet_tcp(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type);
+int send_packet_tcp(int sockfd, char *packet, struct sockaddr_in addr);
+void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
+
+//UDP ( SEND -> RECIEVE -> PROCESS)
+int socket_connection_udp(t_params *params);
+int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int port);
+void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
+
 
 void main_scan_logic(t_params* args);
 

@@ -34,28 +34,33 @@ void fill_packet_tcp(t_packet *pck, int port, char *ip, int scan){
 void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan){
 
     char packet[4096];
-    (void) params;
-    (void) addr;
-    (void) port;
-    (void) packet;
     int sockfd;
     
-    
-    sockfd = socket_connection(params);
+    if (scan != UDP_SCAN)
+        sockfd = socket_connection_tcp(params); //TCP
+    else
+        sockfd = socket_connection_udp(params); //UDP
+
+
     if (!sockfd)
     {
         printf("Error: No se pudo crear el socket del puerto %i\n",port);
         return;
     }
+
     ft_bzero(packet, sizeof(packet));
-    // printf("Socket creado para puerto %i\n",port);
-    // (char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type)
-    build_packet(packet,params,addr,port,scan);
-    // build_packet(packet, params, addr, port, type);
-    send_packet(sockfd, packet, addr);
-    // recv_packet(sockfd,buffer);
-  
+    if (params->active_scan != UDP_SCAN)
+    {
+        build_packet_tcp(packet,params,addr,port,scan);
+        send_packet_tcp(sockfd, packet, addr);
+    }
+    else
+    {
+        send_probe_udp(sockfd,addr,params,port);
+    }
+    
     close(sockfd);
+    ft_bzero(packet, sizeof(packet));
     return;
 }
 
@@ -67,12 +72,9 @@ void *send_scans(void *args)
     t_port *port;
 
     ft_memset(&addr, 0, sizeof(addr));
-
     addr.sin_family = AF_INET;
 
-    if (inet_pton(AF_INET,
-                  params->active_ip,
-                  &addr.sin_addr) <= 0)
+    if (inet_pton(AF_INET, params->active_ip, &addr.sin_addr) <= 0)
     {
         printf("Invalid IP -> %s\n", params->active_ip);
         return NULL;
@@ -83,12 +85,7 @@ void *send_scans(void *args)
     while (ports)
     {
         port = (t_port *)ports->content;
-
-        scan_port(params,
-                  addr,
-                  port->port_nbr,
-                  params->active_scan);
-
+        scan_port(params,addr,port->port_nbr,params->active_scan);
         ports = ports->next;
     }
 
@@ -127,7 +124,6 @@ static const char *port_state_str(t_port_state state)
             return "OP|FILT";
             break;
         
-        
         default:
             break;
     }
@@ -160,7 +156,7 @@ void main_scan_logic(t_params* args){
 
     t_list *scans = NULL;
     scans = *args->scan;
-
+    // print_result_table(*args->results);
     while (scans)
     {
         ((t_params *)args)->active_scan = *(t_scan *)scans->content;
@@ -168,7 +164,7 @@ void main_scan_logic(t_params* args){
         
 
         pthread_create(&receiver_thread, NULL, receive_scans, args);
-        sleep(1);
+        sleep(2);
         pthread_create(&sender_thread, NULL, send_scans, args);
 
         pthread_join(sender_thread, NULL);

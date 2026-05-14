@@ -1,21 +1,24 @@
 
+
 #include "../../lib/nmap.h"
 
-unsigned short checksum(char *b, int len) {
+unsigned short checksum_tcp(char *b, int len)
+{
     unsigned short *buf = (unsigned short *)b;
     unsigned int sum = 0;
 
-    //(Seguimos el estandard (RFC 1071) y sumamos de 2 bytes en 2 bytes
-    while (len > 1) {
+    while (len > 1)
+    {
         sum += *buf++;
         len -= 2;
     }
 
     if (len == 1)
-        sum += *(unsigned char *)buf;  // último byte si es impar
+        sum += *(unsigned char *)buf;
 
     sum = (sum >> 16) + (sum & 0xFFFF);
     sum += (sum >> 16);
+
     return ~sum;
 }
 
@@ -33,7 +36,7 @@ void compute_tcp_checksum(struct iphdr *ip, struct tcphdr *tcp)
     ft_memcpy(buf, &tcp_checksum, sizeof(tcp_checksum));
     ft_memcpy(buf + sizeof(tcp_checksum), tcp, sizeof(struct tcphdr));
 
-    tcp->check = checksum(buf, sizeof(tcp_checksum) + sizeof(struct tcphdr));
+    tcp->check = checksum_tcp(buf, sizeof(tcp_checksum) + sizeof(struct tcphdr));
 }
 
 void build_ip_header(t_params *params,struct iphdr *ip, struct sockaddr_in dst)
@@ -51,9 +54,8 @@ void build_ip_header(t_params *params,struct iphdr *ip, struct sockaddr_in dst)
     ip->daddr = dst.sin_addr.s_addr;            //Destiny IP
 }
 
-void build_tcp_header(t_params *params,struct tcphdr *tcp, int port, t_scan type)
+void build_tcp_header(struct tcphdr *tcp, int port, t_scan type)
 {
-    (void) params;
     ft_memset(tcp, 0, sizeof(struct tcphdr));
 
     tcp->source = htons(SOURCE_PORT);   //From what port originates
@@ -83,7 +85,7 @@ void build_tcp_header(t_params *params,struct tcphdr *tcp, int port, t_scan type
     tcp->check = 0;  // Checksum (Will be put later)
 }
 
-void build_packet(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type)
+void build_packet_tcp(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type)
 {
     struct iphdr *ip = (struct iphdr *)packet;
     struct tcphdr *tcp = (struct tcphdr *)(packet + sizeof(struct iphdr));
@@ -91,8 +93,8 @@ void build_packet(char *packet, t_params *params, struct sockaddr_in addr, int p
     ft_memset(packet, 0, 4096);
 
     build_ip_header(params, ip, addr);
-    // debug_ip_header(ip);
-    build_tcp_header(params,tcp, port, type);
-    // debug_tcp_header(tcp);
+    build_tcp_header(tcp, port, type);
     compute_tcp_checksum(ip, tcp); //(Tanto rollo para hacer el checksum :v )
+    // debug_ip_header(ip);
+    // debug_tcp_header(tcp);
 }

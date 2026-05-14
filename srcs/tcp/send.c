@@ -1,6 +1,6 @@
 #include "../../lib/nmap.h"
 
-int send_packet(int sockfd, char *packet, struct sockaddr_in addr)
+int send_packet_tcp(int sockfd, char *packet, struct sockaddr_in addr)
 {
     ssize_t sent;
     ssize_t payload_size = (sizeof(struct iphdr) + sizeof(struct tcphdr));
@@ -9,10 +9,9 @@ int send_packet(int sockfd, char *packet, struct sockaddr_in addr)
 
     if (sent < 0)
     {
-        printf("Error : Sending to port\n");
+        if (DEBUG)
+            printf("Error : TCP Sending to port\n");
         return -1;
     }
-    if (DEBUG)
-        printf("Sending packet to port\n");
     return sent;
 }

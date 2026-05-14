@@ -13,6 +13,8 @@ SRCS =	srcs/main.c   \
 		srcs/tcp/build.c \
 		srcs/tcp/send.c \
 		srcs/tcp/recv.c \
+		srcs/udp/recv.c \
+		srcs/udp/send.c \
 		srcs/a_pck_scan.c \
 		srcs/a_pck_capture.c \
 		srcs/socket.c 

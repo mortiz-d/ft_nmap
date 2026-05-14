@@ -9,6 +9,35 @@ int free_all(t_list *flags, t_params *params)
     return 1;
 }
 
+
+// int send_probe_udp_2(int sockfd, struct sockaddr_in addr,t_params *params)
+// {
+//         (void)params;
+
+//     char *mensaje;
+//     int     send;
+//     ssize_t mensaje_size;
+//     uint16_t dest_port ;
+
+//     dest_port = UDP_DEFAULT_BASE_PORT;
+//     mensaje_size = 500;
+
+//     mensaje = ft_calloc(mensaje_size, sizeof(char));
+//     addr.sin_port = htons(dest_port);
+    
+
+//     send = sendto(sockfd, mensaje, sizeof(mensaje), 0, (struct sockaddr *)&addr, sizeof(addr));
+//     if (send < 0) {
+//         if (DEBUG)
+//             fprintf(stderr,"traceroute : Error sending UDP probe\n");
+//         return 0;
+//     }
+
+//     free(mensaje);
+//     return 1;
+// }
+
+
 int main(int argc, char **argv) 
 {
     t_list *flags = NULL;
@@ -16,8 +45,6 @@ int main(int argc, char **argv)
     t_list *ip_selected = NULL;
     char *aux;
 
-    (void)aux;
-    (void)ip_selected;
     params =  params_default_config();
     flags = flags_config();
 
@@ -35,14 +62,9 @@ int main(int argc, char **argv)
         return free_all(flags, params);
     }
 
-    
-    // main_scan_logic(params);
-
-
     ip_selected = *params->ip_list;
     while (ip_selected)
     {
-        // printf("A\n");
         printf("argv->%s\n", (char *)ip_selected->content);
         aux = dns_lookup((char *)ip_selected->content);
         get_local_ip(aux, params->internal_ip);
@@ -50,7 +72,6 @@ int main(int argc, char **argv)
         main_scan_logic(params);
         free(aux);
         ip_selected = ip_selected->next;
-        // printf("C\n");
     }
     printf("F\n");
     return free_all(flags, params);

@@ -1,7 +1,5 @@
 #include "../lib/nmap.h"
 
-
-
 void free_params(t_params *param)
 {
 
@@ -127,10 +125,8 @@ void reset_resutls_field(t_result_scan * r_scan, t_list *scans)
                 r_scan->xmas = PORT_OPENFILTERED;
                 break;
             case UDP_SCAN:
-                r_scan->xmas = PORT_UNKNOWN;
+                r_scan->udp = PORT_OPENFILTERED;
                 break;
-            
-        
             default:
                 break;
         }
@@ -305,7 +301,6 @@ static t_list *extract_ip_lists(char *filename)
 
 }
 
-
 static t_list *extract_ip(char *ip)
 {
     if (!ip)
@@ -392,8 +387,8 @@ t_params *params_default_config (void)
     param->scan = NULL;
     param->ip_list = NULL;
     extract_ports(param,"0-1023");
-    extract_scan(param,"SYN/NUL/FIN/XMAS/ACK");
-    // extract_scan(param,"ACK");
+    extract_scan(param,"SYN/NUL/FIN/XMAS/ACK/UDP");
+    // extract_scan(param,"UDP");
     
     return param;
 }
