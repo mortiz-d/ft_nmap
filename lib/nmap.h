@@ -89,6 +89,19 @@ typedef struct s_packet{
     struct tcphdr header;
 } t_packet;
 
+typedef struct s_scan_task {
+    int t_id;
+    int port;
+    int scan;
+    char *ip;
+    struct s_scan_task *next;
+} t_scan_task;
+
+struct s_scan_tasks{
+    pthread_mutex_t *queue_lock;
+    struct s_scan_task *head;
+};
+
 //FLAGS FUNCTIONS
 // t_flag *flags_config (void);
 // void test_flag(t_flag *flag,t_params *params);

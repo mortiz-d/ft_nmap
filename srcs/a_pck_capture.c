@@ -45,11 +45,9 @@ void capture_packets(){
         printf("Couldn't open device: %s\n", errbuf);
         return;
     }  
-
-
     
     struct bpf_program fp;
-    char filter[] = "tcp and (src host 8.8.8.8 or dst host 8.8.8.8)";
+    char filter[] = "tcp and (src host 192.168.1.100 or dst host 192.168.1.100)";
     // char filter[] = "tcp";
 
     pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN);

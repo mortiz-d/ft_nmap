@@ -33,7 +33,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@make -C ./libft
 #
-	$(CC) $(CFLAGS) -lpcap -o $(NAME) $(OBJS) $(LIBFT_A)
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A) -lpthread -lpcap 
 	$(BLUE) $(NAME) set Up $(RESET)
 #	mv ./$(NAME) ./testing/files/$(NAME)
 
