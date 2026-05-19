@@ -93,9 +93,7 @@ void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN))
     {
         if (DEBUG)
-                printf("RECV  [%s:%d] → [%s:%d] | flags: %s%s%s%s%s%s | len: %d bytes\n",
-        src_ip, ntohs(tcp->th_sport),
-        dst_ip, ntohs(tcp->th_dport),
+            printf("RECV  [%s:%d] → [%s:%d] | flags: %s%s%s%s%s%s | len: %d bytes\n", src_ip, ntohs(tcp->th_sport), dst_ip, ntohs(tcp->th_dport),
         tcp->th_flags & TH_SYN  ? "SYN " : "",
         tcp->th_flags & TH_ACK  ? "ACK " : "",
         tcp->th_flags & TH_RST  ? "RST " : "",
@@ -113,8 +111,8 @@ void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
     {
         if ((tcp->th_flags & TH_RST) == 0)
             params->n_packet_sended++;
-
-        printf("SEND  [%s:%d] → [%s:%d] | flags: %s%s%s%s%s%s | len: %d bytes\n", src_ip, ntohs(tcp->th_sport), dst_ip, ntohs(tcp->th_dport),
+        if (DEBUG)
+            printf("SEND  [%s:%d] → [%s:%d] | flags: %s%s%s%s%s%s | len: %d bytes\n", src_ip, ntohs(tcp->th_sport), dst_ip, ntohs(tcp->th_dport),
             tcp->th_flags & TH_SYN  ? "SYN " : "",
             tcp->th_flags & TH_ACK  ? "ACK " : "",
             tcp->th_flags & TH_RST  ? "RST " : "",
