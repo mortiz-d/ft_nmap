@@ -1,5 +1,39 @@
 #include "../lib/nmap.h"
 
+int get_local_ip(char *dest_ip, char *out_ip)
+{
+    int sock;
+    struct sockaddr_in dest;
+    struct sockaddr_in local;
+    socklen_t len = sizeof(local);
+
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(80);
+    inet_pton(AF_INET, dest_ip, &dest.sin_addr);
+
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0)
+        return 0;
+
+    if (connect(sock, (struct sockaddr *)&dest, sizeof(dest)) < 0)
+    {
+        close(sock);
+        return 0;
+    }
+
+    if (getsockname(sock, (struct sockaddr *)&local, &len) < 0)
+    {
+        close(sock);
+        return 0;
+    }
+
+    inet_ntop(AF_INET, &local.sin_addr, out_ip, INET_ADDRSTRLEN);
+
+    close(sock);
+    return 1;
+}
+
 char *dns_lookup(char *host) {
     struct addrinfo hints;
     struct addrinfo *result;
@@ -27,27 +61,28 @@ char *dns_lookup(char *host) {
     return res;
 }
 
-char *ip_a_dns(const char *ip_str)
-{
-    struct sockaddr_in sa;
-    char host[NI_MAXHOST];
-    int err;
-    char *dns;
+//NOT IN USE (COPPIED FROM PING)
+// char *ip_a_dns(const char *ip_str)
+// {
+//     struct sockaddr_in sa;
+//     char host[NI_MAXHOST];
+//     int err;
+//     char *dns;
 
-    ft_memset(&sa, 0, sizeof(sa));
-    sa.sin_family = AF_INET;
+//     ft_memset(&sa, 0, sizeof(sa));
+//     sa.sin_family = AF_INET;
 
-    if (inet_pton(AF_INET, ip_str, &sa.sin_addr) != 1)
-        return NULL;
+//     if (inet_pton(AF_INET, ip_str, &sa.sin_addr) != 1)
+//         return NULL;
 
-    err = getnameinfo((struct sockaddr *)&sa, sizeof sa, host, sizeof host, NULL, 0, NI_NAMEREQD);
-    if (err != 0)
-        return NULL;
+//     err = getnameinfo((struct sockaddr *)&sa, sizeof sa, host, sizeof host, NULL, 0, NI_NAMEREQD);
+//     if (err != 0)
+//         return NULL;
 
-    dns = malloc(strlen(host) + 1);
-    if (!dns)
-        return NULL;
+//     dns = malloc(strlen(host) + 1);
+//     if (!dns)
+//         return NULL;
 
-    strcpy(dns, host);
-    return dns;
-}
+//     strcpy(dns, host);
+//     return dns;
+// }

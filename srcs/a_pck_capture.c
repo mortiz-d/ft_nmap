@@ -1,61 +1,67 @@
 #include "../lib/nmap.h"
 
-void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt)
-{
-    char src_ip[INET_ADDRSTRLEN];
-    char dst_ip[INET_ADDRSTRLEN];
-    (void)args;
-
-    struct iphdr  *ip  = (struct iphdr *)(pkt + 14);
-    struct tcphdr *tcp = (struct tcphdr *)(pkt + 14 + ip->ihl * 4);
-
-    inet_ntop(AF_INET, &ip->saddr, src_ip, sizeof(src_ip));
-    inet_ntop(AF_INET, &ip->daddr, dst_ip, sizeof(dst_ip));
-
-    printf("[%s:%d] → [%s:%d] | flags: %s%s%s | len: %d bytes\n",
-        src_ip, ntohs(tcp->th_sport),
-        dst_ip, ntohs(tcp->th_dport),
-        tcp->th_flags & TH_SYN ? "SYN " : "",
-        tcp->th_flags & TH_ACK ? "ACK " : "",
-        tcp->th_flags & TH_RST ? "RST " : "",
-        hdr->len
-    );
-}
-
-void capture_packets(){
+void capture_packets(t_params *params){
+    char        filter[256];
     char        errbuf[PCAP_ERRBUF_SIZE];
     pcap_t      *handle;
     pcap_if_t   *dev_lst;
     char        *dev;
+    struct bpf_program fp;
+    time_t      start;
 
     if (pcap_findalldevs(&dev_lst, errbuf) < 0) {
         printf("Couldn't find device: %s\n", errbuf);
         return;
     }
     dev = dev_lst->name;
-    pcap_if_t *d;
-    for (d = dev_lst; d; d = d->next)
-    {
-        printf("Interface to listen %s\n", d->name);
-    }
-    printf("Listening on: %s\n", dev);
 
     handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
     if (!handle) {
         printf("Couldn't open device: %s\n", errbuf);
         return;
-    }  
-    
-    struct bpf_program fp;
-    char filter[] = "tcp and (src host 192.168.1.100 or dst host 192.168.1.100)";
-    // char filter[] = "tcp";
+    }
+    if (DEBUG)
+        printf("PCAP : ready for scans\n");
+    params->n_packet_sended = 0;
+    params->n_packet_recieved = 0;
+
+   
+    // filter = "(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)"; //Solo detecta open|filtered o closed falta open (viene de un mensaje UDP)
+    // char filter[] = "(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)";
+    ft_memset(filter,0,256);
+    if (params->active_scan == UDP_SCAN)
+        ft_strlcpy(filter,"(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)",256);
+    else
+        ft_strlcpy(filter,"(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)",256);
 
     pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, &fp);
 
-    pcap_loop(handle, 0, packet_handler, NULL);
+    pcap_setnonblock(handle, 1, errbuf);
+    
+    start = time(NULL);
+    while ( params->n_packet_sended < params->n_ports)
+    {
+        if (params->active_scan == UDP_SCAN)
+            pcap_dispatch(handle, -1, packet_handler_udp, (u_char *)params);
+        else
+            pcap_dispatch(handle, -1, packet_handler_tcp, (u_char *)params);
+        usleep(1000);
+    }
 
-    pcap_freealldevs(dev_lst);
+    while (time(NULL) - start < 5)
+    {
+        if (params->n_packet_recieved >= params->n_packet_sended)
+            break;
+        if (params->active_scan == UDP_SCAN)
+            pcap_dispatch(handle, -1, packet_handler_udp, (u_char *)params);
+        else
+            pcap_dispatch(handle, -1, packet_handler_tcp, (u_char *)params);
+        usleep(10000);
+    }
+
     pcap_freecode(&fp);
     pcap_close(handle);
+    pcap_freealldevs(dev_lst);
+   
 }

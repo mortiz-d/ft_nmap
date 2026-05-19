@@ -1,12 +1,8 @@
 #include "../lib/nmap.h"
 
-
-
 void free_params(t_params *param)
 {
 
-    if (param->destination)
-        free (param->destination);
     if (param->scan)
     {
         ft_lstiter(*param->scan,free);
@@ -24,6 +20,12 @@ void free_params(t_params *param)
         ft_lstiter(*param->ports,free);
         ft_lstclear(param->ports);
         free (param->ports);
+    }
+    if (param->results)
+    {
+        ft_lstiter(*param->results,free);
+        ft_lstclear(param->results);
+        free (param->results);
     }
     free(param);
     return;
@@ -93,6 +95,127 @@ static int add_port_range(t_list **lst, char* str )
     return created;
 }
 
+void reset_resutls_field(t_result_scan * r_scan, t_list *scans)
+{
+    t_scan *scan;
+    // r_scan->confirm_sended = 0;
+    r_scan->syn = PORT_UNCALLED;
+    r_scan->nul = PORT_UNCALLED;
+    r_scan->ack = PORT_UNCALLED;
+    r_scan->fin = PORT_UNCALLED;
+    r_scan->xmas = PORT_UNCALLED;
+    r_scan->udp = PORT_UNCALLED;
+    while (scans){
+        scan = (t_scan *)scans->content;
+        switch (*scan)
+        {
+            case SYN_SCAN:
+                r_scan->syn = PORT_FILTERED;
+            break;
+            case NUL_SCAN:
+                r_scan->nul = PORT_CLOSED;
+            break;
+            case ACK_SCAN:
+                r_scan->ack = PORT_FILTERED;
+            break;
+            case FIN_SCAN:
+                r_scan->fin = PORT_OPENFILTERED;
+            break;
+            case XMAS_SCAN:
+                r_scan->xmas = PORT_OPENFILTERED;
+                break;
+            case UDP_SCAN:
+                r_scan->udp = PORT_OPENFILTERED;
+                break;
+            default:
+                break;
+        }
+        
+        scans = scans->next;
+    }
+
+}
+
+void reset_all_results(t_list **results, t_list *scans)
+{
+    t_list *res;
+    t_result_scan *r_scan;
+
+    res = *results;
+
+    while (res)
+    {
+        r_scan = (t_result_scan *)res->content;
+        reset_resutls_field(r_scan, scans);
+        res = res->next;
+    }
+}
+
+void generate_result_table(t_params *params)
+{
+    t_list **lst_res = ft_calloc(1,sizeof(t_list*));
+    t_list *ports = NULL;
+    t_port *port = NULL;
+    t_result_scan *aux;
+    
+
+    ports = *(params->ports);
+    while (ports){
+
+        aux = ft_calloc(1,sizeof(t_result_scan));
+        port = (t_port *)ports->content;
+        aux->port_nbr = port->port_nbr;
+        reset_resutls_field(aux,*(params->scan));
+        ft_lstadd_back(lst_res, ft_lstnew(aux));
+        ports = ports->next;
+    }
+    params->results = lst_res;
+}
+
+static t_scan get_scan(char *str)
+{
+    const char *scan_names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP"};
+    int num_scans = sizeof(scan_names) / sizeof(scan_names[0]);
+
+    for (int i = 0; i < num_scans; i++)
+    {
+        if (strcmp(str, scan_names[i]) == 0)
+            return (t_scan)i;
+    }
+
+    return SCAN_UNKNOWN;
+}
+
+static int extract_scan(t_params *params,char *str)
+{
+    t_list **lst_scans = ft_calloc(1,sizeof(t_list*));
+    char **scans = NULL;
+    t_scan *new_aux;
+    t_scan aux;
+    int error = 0;
+    
+    scans = ft_split(str,'/');
+    for(int i = 0; scans[i] != NULL; i++)
+    {
+        aux = get_scan(scans[i]);
+        new_aux = malloc(sizeof(t_scan));
+        if (!new_aux)
+        {
+            error = 1;
+            break;
+        }
+        *new_aux = aux;
+        ft_lstadd_back(lst_scans, ft_lstnew(new_aux));
+    }
+
+    params->scan = lst_scans;
+
+    for(int i = 0; scans[i] != NULL; i++)
+        free(scans[i]);
+    free(scans);
+
+    return !error;
+}
 
 static int create_port (t_list **lst,char *str)
 {
@@ -156,52 +279,6 @@ static int extract_ports(t_params *params, char* str)
 
 }
 
-static t_scan get_scan(char *str)
-{
-    const char *scan_names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP"};
-    int num_scans = sizeof(scan_names) / sizeof(scan_names[0]);
-
-    for (int i = 0; i < num_scans; i++)
-    {
-        if (strcmp(str, scan_names[i]) == 0)
-            return (t_scan)i;
-    }
-
-    return SCAN_UNKNOWN;
-}
-
-static int extract_scan(t_params *params,char *str)
-{
-    t_list **lst_scans = ft_calloc(1,sizeof(t_list*));
-    char **scans = NULL;
-    t_scan *new_aux;
-    t_scan aux;
-    int error = 0;
-    
-    scans = ft_split(str,'/');
-    for(int i = 0; scans[i] != NULL; i++)
-    {
-        aux = get_scan(scans[i]);
-        new_aux = malloc(sizeof(t_scan));
-        if (!new_aux)
-        {
-            error = 1;
-            break;
-        }
-        *new_aux = aux;
-        ft_lstadd_back(lst_scans, ft_lstnew(new_aux));
-    }
-
-    params->scan = lst_scans;
-
-    for(int i = 0; scans[i] != NULL; i++)
-        free(scans[i]);
-    free(scans);
-
-    return !error;
-}
-
-
 static t_list *extract_ip_lists(char *filename)
 {
     t_list *lst_ips = NULL;
@@ -224,15 +301,12 @@ static t_list *extract_ip_lists(char *filename)
 
 }
 
-
 static t_list *extract_ip(char *ip)
 {
-    printf("LEEO IP\n");
     if (!ip)
         return NULL;
     return ft_lstnew(ft_strdup(ip));
 }
-
 
 //fucntions related to each flag
 int apply_help(t_flag *flag, t_params *params)
@@ -310,10 +384,11 @@ t_params *params_default_config (void)
 {
     t_params *param = ft_calloc(sizeof(t_params), 1);
     param->threads = 1;
-    param->destination = NULL;
     param->scan = NULL;
     param->ip_list = NULL;
     extract_ports(param,"0-1023");
-    extract_scan(param,"SYN");
+    extract_scan(param,"SYN/NUL/FIN/XMAS/ACK/UDP");
+    // extract_scan(param,"UDP");
+    
     return param;
 }
