@@ -2,7 +2,7 @@
 # define NMAP_H
 
 #define _GNU_SOURCE
-#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
 #define DEBUG 0
@@ -46,6 +46,9 @@ typedef struct s_tcp_checksum {
     uint8_t protocol;
     uint16_t tcp_length;
 } t_tcp_checksum;
+
+#define DEBUG 0
+
 
 typedef enum e_port_state
 {
@@ -151,5 +154,12 @@ void main_scan_logic(t_params* args);
 
 //CAPTURE
 void capture_packets(t_params *params);
+
+
+//SCAN
+void main_scan_logic(t_params* args);
+
+//CAPTURE
+void capture_packets();
 
 #endif
