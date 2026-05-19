@@ -76,11 +76,11 @@ void *send_scans(void *args){
         if (!task) return NULL;
 
         //PRUEBAS----
-        // printf("%i %s p=%i s=%i\n", task->t_id, task->ip, task->port, task->scan);
-        // sleep(1);
+        printf("%i %s p=%i s=%i\n", task->t_id, task->ip, task->port, task->scan);
+        sleep(1);
         //----
         
-        scan_port(task->ip, task->port, (t_scan *)&task->scan);
+        // scan_port(task->ip, task->port, (t_scan *)&task->scan);
         
         free(task->ip);
         free(task);
@@ -88,12 +88,12 @@ void *send_scans(void *args){
     return NULL;
 }
 
-void *receive_scans(void *args){
+/* void *receive_scans(void *args){
     t_params *params = (t_params *)args;
     (void)params; //QUITAR, es para que se calle el unused variable
     capture_packets();
     return NULL;
-}
+} */
 
 void main_scan_logic(t_params* args){
     t_list *ips = *args->ip_list;
@@ -131,7 +131,7 @@ void main_scan_logic(t_params* args){
                 else
                     head = ptr;
                 tail = ptr;
-                // printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
+                printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
             }
         }
         ips = ips->next;
@@ -143,29 +143,9 @@ void main_scan_logic(t_params* args){
     for (int i = 0; i < args->threads; ++i){
         pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
     }
-    capture_packets();
+    capture_packets(args);
     
     for (int i = 0; i < args->threads; ++i){
         pthread_join(sender_threads[i], NULL);
     }
-    
-    /* 
-    // t_scan_args *scanargs;
-    pthread_t receiver_thread;
-    
-    sender_threads = malloc(sizeof(pthread_t) * args->threads);
-    // scanargs = malloc(sizeof(t_scan_args) * args->threads);
-    for (int i = 0; i < args->threads; ++i){
-        // scanargs[i] = {i, args->port, args->scan, args->ip} //IMPLEMENTAR DE VERDAD
-        pthread_create(&sender_threads[i], NULL, send_scans, args);
-    }
-
-    pthread_create(&receiver_thread, NULL, receive_scans, args);
-
-    for (int i = 0; i < args->threads; ++i){
-        pthread_join(sender_threads[i], NULL);
-    }
-    pthread_join(receiver_thread, NULL);
-    
-    free(sender_threads); */
 }

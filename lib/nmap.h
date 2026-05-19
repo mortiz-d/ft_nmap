@@ -5,7 +5,7 @@
 #define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
-#define DEBUG 0
+#define DEBUG 1
 #define NI_MAXHOST 1025
 
 #define MIN_PORT_RANGE 0
@@ -46,8 +46,6 @@ typedef struct s_tcp_checksum {
     uint8_t protocol;
     uint16_t tcp_length;
 } t_tcp_checksum;
-
-#define DEBUG 0
 
 
 typedef enum e_port_state
@@ -124,6 +122,7 @@ typedef struct s_scan_task {
 
 struct s_scan_tasks{
     pthread_mutex_t *queue_lock;
+    t_params *params;
     struct s_scan_task *head;
 };
 
