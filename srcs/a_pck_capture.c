@@ -1,7 +1,40 @@
 #include "../lib/nmap.h"
+#include <stdio.h>
+
+char *create_filter(t_params *params){
+    char *filter = NULL;
+    char *temp = NULL;
+    t_list *ips = *params->ip_list;
+    char *ip = NULL;
+
+    int i = 0;
+    while (ips){
+        ip = (char *)ips->content;
+        if (i == 0)
+            temp = ft_strdup("(src host ");
+        else
+            temp = ft_strjoin(filter, " or src host ");
+        filter = ft_strjoin(temp, ip);
+        free(temp);
+        
+        ips = ips->next;
+        ++i;
+    }
+    
+    temp = filter;
+    if (params->active_scan == UDP_SCAN)
+        filter = ft_strjoin(filter, ") and udp");
+    else
+        filter = ft_strjoin(filter, ") and tcp");
+
+    printf("filter is %s\n", filter);
+    free(temp);
+    return filter;
+}
+
 
 void capture_packets(t_params *params){
-    char        filter[256];
+    char        *filter;
     char        errbuf[PCAP_ERRBUF_SIZE];
     pcap_t      *handle;
     pcap_if_t   *dev_lst;
@@ -24,16 +57,8 @@ void capture_packets(t_params *params){
         printf("PCAP : ready for scans\n");
     params->n_packet_sended = 0;
     params->n_packet_recieved = 0;
-   
-    // filter = "(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)"; //Solo detecta open|filtered o closed falta open (viene de un mensaje UDP)
-    // char filter[] = "(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)";
-    ft_memset(filter,0,256);
-    if (params->active_scan == UDP_SCAN)
-        ft_strlcpy(filter,"(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)",256);
-    else
-        ft_strlcpy(filter,"(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)",256);
-    ft_memset(filter,0,256);
-    ft_strlcpy(filter,"(tcp and dst host 192.168.1.100) or (tcp and src host 192.168.1.100)",256);
+
+    filter = create_filter(params);
 
     pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, &fp);
