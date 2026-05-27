@@ -64,6 +64,46 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
     return;
 }
 
+static t_scan_task *dequeue(t_scan_task **head){
+    t_scan_task *task = *head;
+    if (!task)
+        return NULL;
+    *head = (*head)->next;
+    return task;
+}
+
+void *send_scans(void *args){
+    struct s_scan_tasks *task_args = (struct s_scan_tasks *)args;
+    struct sockaddr_in addr;
+    
+    while (1) {
+        pthread_mutex_lock(task_args->queue_lock);
+        t_scan_task *task = dequeue(&task_args->head);
+        pthread_mutex_unlock(task_args->queue_lock);
+        
+        if (!task) return NULL;
+
+        //PRUEBAS----
+        // printf("%i %s p=%i s=%i\n", task->t_id, task->ip, task->port, task->scan);
+        // sleep(1);
+        //----
+        ft_memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+    
+        if (inet_pton(AF_INET, task->ip, &addr.sin_addr) <= 0)
+        {
+            printf("Invalid IP -> %s\n", task->ip);
+            return NULL;
+        }
+        scan_port(task_args->params,addr, task->port, (t_scan)task->scan);
+        
+        free(task->ip);
+        free(task);
+    }
+    return NULL;
+}
+
+/* OLD
 void *send_scans(void *args)
 {
     t_params *params = (t_params *)args;
@@ -90,16 +130,16 @@ void *send_scans(void *args)
     }
 
     return NULL;
-}
+} */
 
 //Este hilo ira recogiendo todos los 
-void *receive_scans(void *args){
+/* void *receive_scans(void *args){
     t_params *params = (t_params *)args;
     (void)params; //QUITAR, es para que se calle el unused variable | NOT ANYMORE (mortiz)
     capture_packets(params);
     //usar la libreria pcap para capturar paquetes
     return NULL;
-}
+} */
 
 static const char *port_state_str(t_port_state state)
 {
@@ -151,6 +191,67 @@ void print_result_table(t_list *lst)
 }
 
 void main_scan_logic(t_params* args){
+    t_list *ips = *args->ip_list;
+    char *ip = NULL;
+
+    t_port *prt = NULL;
+    int port = 0;
+    t_scan *scan = NULL;
+
+    t_scan_task *head = NULL;
+    t_scan_task *tail = NULL;
+    t_scan_task *ptr = NULL;
+
+    pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
+    
+    int task_count = 0;
+    while (ips){
+        ip = (char *)ips->content;
+        
+        for (t_list *ports = *args->ports; ports; ports = ports->next){
+            prt = (t_port *)ports->content;
+            port = prt->port_nbr;
+            
+            for (t_list *scans = *args->scan; scans; scans = scans->next){
+                ++task_count;
+                scan = (t_scan *)scans->content;
+                ptr = malloc(sizeof(t_scan_task));
+                ptr->t_id = task_count;
+                ptr->port = port;
+                ptr->ip = ft_strdup(ip);
+                ptr->scan = *scan;
+                ptr->next = NULL;
+                if (tail)
+                    tail->next = ptr;
+                else
+                    head = ptr;
+                tail = ptr;
+                // printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
+            }
+        }
+        ips = ips->next;
+    }
+    if(DEBUG)
+        printf("Executing %i tasks in %i threads\n", task_count, args->threads);
+
+    struct s_scan_tasks task_args = {&queue_lock, args, head};
+    pthread_t *sender_threads = malloc(sizeof(pthread_t) * args->threads);
+    for (int i = 0; i < args->threads; ++i){
+        pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
+    }
+    capture_packets(args);
+    
+    for (int i = 0; i < args->threads; ++i){
+        pthread_join(sender_threads[i], NULL);
+    }
+
+    print_result_table(*args->results);
+    reset_all_results(args->results, *args->scan);
+    // clean_result_table(*args->results);
+}
+
+/* OLD
+void main_scan_logic(t_params* args){
     pthread_t sender_thread;
     pthread_t receiver_thread;
 
@@ -175,48 +276,5 @@ void main_scan_logic(t_params* args){
     print_result_table(*args->results);
     reset_all_results(args->results, *args->scan);
     // clean_result_table(*args->results);
-}
-/*
-void test_tcp(){
-    int sock_r = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock_r < 0){
-        perror("ERR creating socket");
-        return;
-    }
-    struct timeval timeout = { .tv_sec = 5, .tv_usec = 0 };
-    setsockopt(sock_r, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    // t_packet packet;
-    char r_buffer[1024];
-    // struct sockaddr_in ping_from;
-    // socklen_t addrlen = sizeof(ping_from);
-
-    struct sockaddr_in ping_to;
-    ping_to.sin_family = AF_INET;
-    ping_to.sin_port = htons(80);
-    ft_memset(ping_to.sin_zero, 0, sizeof(ping_to.sin_zero));
-    if (!inet_pton(AF_INET, "142.250.185.46", &(ping_to.sin_addr))){
-        ft_printf("Wrong address\n");
-        return;
-    }
-
-    if (connect(sock_r, (struct sockaddr *)&ping_to, sizeof(ping_to)) < 0) {
-        perror("ERR connecting");
-        return;
-    }
-
-    const char *msg = "GET / HTTP/1.0\r\n\r\n";
-    int snd = send(sock_r, msg, strlen(msg), 0);
-    if (snd < 0){
-        perror("ERR sending");
-        return;
-    }
-    int rec_bytes = recv(sock_r, r_buffer, sizeof(r_buffer) - 1, 0);
-    if (rec_bytes < 0){
-        perror("ERR rec");
-        return;
-    }else {
-        r_buffer[rec_bytes] = '\0';
-        ft_printf("Received:\n%s\n", r_buffer);
-    }
 }
  */

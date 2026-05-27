@@ -24,7 +24,6 @@ void capture_packets(t_params *params){
         printf("PCAP : ready for scans\n");
     params->n_packet_sended = 0;
     params->n_packet_recieved = 0;
-
    
     // filter = "(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)"; //Solo detecta open|filtered o closed falta open (viene de un mensaje UDP)
     // char filter[] = "(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)";
@@ -33,6 +32,8 @@ void capture_packets(t_params *params){
         ft_strlcpy(filter,"(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)",256);
     else
         ft_strlcpy(filter,"(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)",256);
+    ft_memset(filter,0,256);
+    ft_strlcpy(filter,"(tcp and dst host 192.168.1.100) or (tcp and src host 192.168.1.100)",256);
 
     pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, &fp);
