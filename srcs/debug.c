@@ -56,7 +56,7 @@ void debug_params(t_params *params)
     if (params->help)
         printf("ACTIVATED\n");
     else
-        printf("ACTIVATED\n");
+        printf("DEACTIVATED\n");
 
 
     printf("\n--- THREADS ---\n");

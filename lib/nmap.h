@@ -13,7 +13,7 @@
 #define UDP_DEFAULT_BASE_PORT 33434
 #define SOURCE_PORT 52341
 #define TIMEOUT_MS 3000
-
+#define EXEC_NAME "ft_nmap"
 
 #include "../libft/lib/libft.h"
 #include "../libft/lib/get_next_line.h"

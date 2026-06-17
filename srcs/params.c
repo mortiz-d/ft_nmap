@@ -313,6 +313,7 @@ int apply_help(t_flag *flag, t_params *params)
 {
     (void)flag;
     params->help = true;
+    ft_printf("%s: help --ports --ip --speedup --file --scan\n",EXEC_NAME);
     return 1;
 }
 
