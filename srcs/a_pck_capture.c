@@ -28,12 +28,23 @@ void capture_packets(t_params *params){
     // filter = "(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)"; //Solo detecta open|filtered o closed falta open (viene de un mensaje UDP)
     // char filter[] = "(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)";
     ft_memset(filter,0,256);
+    // if (params->active_scan == UDP_SCAN)
+    //     ft_strlcpy(filter,"(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)",256);
+    // else
+    //     ft_strlcpy(filter,"(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)",256);
+    // ft_memset(filter,0,256);
+    // ft_strlcpy(filter,"(tcp and dst host 192.168.1.100) or (tcp and src host 192.168.1.100)",256);
+
     if (params->active_scan == UDP_SCAN)
-        ft_strlcpy(filter,"(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)",256);
-    else
-        ft_strlcpy(filter,"(tcp and dst host 192.168.1.136 and dst port 52341) or (tcp and src host 192.168.1.136 and src port 52341)",256);
-    ft_memset(filter,0,256);
-    ft_strlcpy(filter,"(tcp and dst host 192.168.1.100) or (tcp and src host 192.168.1.100)",256);
+          snprintf(filter, sizeof(filter),
+              "(icmp and dst host %s) or (udp and src host %s and src port %d)",
+              params->active_ip, params->active_ip, UDP_DEFAULT_BASE_PORT);
+      else
+          snprintf(filter, sizeof(filter),
+              "(tcp and dst host %s and dst port %d) or "
+              "(tcp and src host %s and src port %d)",
+              params->active_ip, SOURCE_PORT, params->active_ip, SOURCE_PORT);
+
 
     pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, &fp);

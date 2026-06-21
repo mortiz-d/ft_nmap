@@ -15,6 +15,8 @@ int main(int argc, char **argv)
     t_params *params = NULL;
     t_list *ip_selected = NULL;
     char *aux;
+    (void) ip_selected;
+    (void) aux;
 
     params =  params_default_config();
     flags = flags_config();
@@ -37,6 +39,8 @@ int main(int argc, char **argv)
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
+
+    //This process the nmap
 
     ip_selected = *params->ip_list;
     while (ip_selected)
