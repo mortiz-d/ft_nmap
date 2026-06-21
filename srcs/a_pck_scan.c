@@ -42,7 +42,7 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
         sockfd = socket_connection_udp(params); //UDP
 
 
-    if (!sockfd)
+    if (sockfd < 0)
     {
         printf("Error: No se pudo crear el socket del puerto %i\n",port);
         return;
@@ -203,18 +203,19 @@ void main_scan_logic(t_params* args){
     t_scan_task *ptr = NULL;
 
     pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
+
+    capture_packets(args);
     
     int task_count = 0;
-    while (ips){
-        ip = (char *)ips->content;
-        
-        for (t_list *ports = *args->ports; ports; ports = ports->next){
-            prt = (t_port *)ports->content;
-            port = prt->port_nbr;
+    for (t_list *scans = *args->scan; scans; scans = scans->next){
+        scan = (t_scan *)scans->content;
+        while (ips){
+            ip = (char *)ips->content;
             
-            for (t_list *scans = *args->scan; scans; scans = scans->next){
+            for (t_list *ports = *args->ports; ports; ports = ports->next){
+                prt = (t_port *)ports->content;
+                port = prt->port_nbr;
                 ++task_count;
-                scan = (t_scan *)scans->content;
                 ptr = malloc(sizeof(t_scan_task));
                 ptr->t_id = task_count;
                 ptr->port = port;
@@ -228,21 +229,23 @@ void main_scan_logic(t_params* args){
                 tail = ptr;
                 // printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
             }
+            ips = ips->next;
         }
-        ips = ips->next;
-    }
-    if(DEBUG)
-        printf("Executing %i tasks in %i threads\n", task_count, args->threads);
-
-    struct s_scan_tasks task_args = {&queue_lock, args, head};
-    pthread_t *sender_threads = malloc(sizeof(pthread_t) * args->threads);
-    for (int i = 0; i < args->threads; ++i){
-        pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
-    }
-    capture_packets(args);
+        args->active_scan = *scan;
+        
+        if(DEBUG)
+            printf("Executing %i tasks in %i threads\n", task_count, args->threads);
     
-    for (int i = 0; i < args->threads; ++i){
-        pthread_join(sender_threads[i], NULL);
+        struct s_scan_tasks task_args = {&queue_lock, args, head};
+        pthread_t *sender_threads = malloc(sizeof(pthread_t) * args->threads);
+        for (int i = 0; i < args->threads; ++i){
+            pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
+        }
+        
+        for (int i = 0; i < args->threads; ++i){
+            pthread_join(sender_threads[i], NULL);
+        }
+        head = NULL;
     }
 
     print_result_table(*args->results);
