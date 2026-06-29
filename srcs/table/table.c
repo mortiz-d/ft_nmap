@@ -1,21 +1,165 @@
 #include "../../lib/nmap.h"
 
-void print_result_table(t_list *lst)
+void free_result(void *result)
 {
-    t_result_port *s;
+    t_result_scan *scan;
 
-    printf("\n");
-    printf("+--------+------------+------------+------------+------------+------------+------------+\n");
-    printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
-    printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+    scan = (t_result_scan *)result;
+    free(scan->ip);
+    ft_lstiter(*scan->port,free);
+    ft_lstclear(scan->port);
 
-    while (lst)
+    free(scan->port);
+    free(scan);
+}
+
+static const char *port_state_str(t_port_state state)
+{
+    switch (state)
     {
-        s = (t_result_port *)lst->content;
+        case PORT_OPEN:
+            return "OPEN";
+            break;
+        case PORT_CLOSED:
+            return "CLOSED";
+            break;
+        case PORT_FILTERED:
+            return "FILTERED";
+            break;
+        case PORT_UNFILTERED:
+            return "UNFILTERED";
+            break; 
+        case PORT_UNCALLED:
+            return "----------";
+            break;
+        case PORT_OPENFILTERED:
+            return "OP|FILT";
+            break;
+        
+        default:
+            break;
+    }
+    return "UNKNOWN";
+}
 
-        printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",s->port_nbr,port_state_str(s->syn),port_state_str(s->nul),port_state_str(s->fin),port_state_str(s->xmas),port_state_str(s->ack),port_state_str(s->udp));
-        lst = lst->next;
+t_result_port * generate_default_port (t_params *params, t_port *port)
+{
+    t_result_port *r_scan;
+    t_list * scans;
+    t_scan *scan;
+
+    r_scan = ft_calloc(1,sizeof(t_result_port));
+    r_scan->port_nbr = port->port_nbr;
+    
+    r_scan->syn = PORT_UNCALLED;
+    r_scan->nul = PORT_UNCALLED;
+    r_scan->ack = PORT_UNCALLED;
+    r_scan->fin = PORT_UNCALLED;
+    r_scan->xmas = PORT_UNCALLED;
+    r_scan->udp = PORT_UNCALLED;
+    scans = *params->scan;
+    while (scans){
+        scan = (t_scan *)scans->content;
+        switch (*scan)
+        {
+            case SYN_SCAN:
+                r_scan->syn = PORT_FILTERED;
+            break;
+            case NUL_SCAN:
+                r_scan->nul = PORT_CLOSED;
+            break;
+            case ACK_SCAN:
+                r_scan->ack = PORT_FILTERED;
+            break;
+            case FIN_SCAN:
+                r_scan->fin = PORT_OPENFILTERED;
+            break;
+            case XMAS_SCAN:
+                r_scan->xmas = PORT_OPENFILTERED;
+                break;
+            case UDP_SCAN:
+                r_scan->udp = PORT_OPENFILTERED;
+                break;
+            default:
+                break;
+        }
+        scans = scans->next;
     }
 
-    printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+    return r_scan;
+}
+
+void generate_result_table(t_params *params)
+{
+    (void)params;
+    ft_printf("WOLOLO\n"); 
+    t_list **lst_res = ft_calloc(1,sizeof(t_list*));
+    t_list **lst_ports = NULL;
+    t_list *ips, *ports;
+    t_result_scan *aux;
+    t_result_port *aux_p;
+
+    ips = *(params->ip_list);
+    while(ips)
+    {
+        aux = ft_calloc(1,sizeof(t_result_scan));
+        aux->ip = ft_strdup((char *)ips->content);
+        ports = *(params->ports);
+        lst_ports = ft_calloc(1,sizeof(t_list*));
+        while (ports)
+        {
+            // aux_p = ft_calloc(1,sizeof(t_result_port));
+            aux_p = generate_default_port(params,(t_port *)ports->content);
+            ft_lstadd_back(lst_ports, ft_lstnew(aux_p));
+            ports = ports->next;
+        }
+        
+        aux->port = lst_ports;
+
+        ft_lstadd_back(lst_res, ft_lstnew(aux));
+        ips = ips->next;
+    }
+    params->results = lst_res;
+}
+
+
+void print_result_table(t_params *params)
+{
+    t_list *a_scan, *p_scan;
+    t_result_scan *scan ;
+    t_result_port *port ;
+
+    a_scan = ((t_list *)*params->results);
+    while (a_scan)
+    {
+        scan = a_scan->content;
+        p_scan = ((t_list *)*scan->port);
+        printf("\n");
+        printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+        printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
+        printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+
+        while (p_scan)
+        {
+            port = p_scan->content;
+            printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",port->port_nbr,port_state_str(port->syn),port_state_str(port->nul),port_state_str(port->fin),port_state_str(port->xmas),port_state_str(port->ack),port_state_str(port->udp));
+            p_scan = p_scan->next;
+        }
+        printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+        a_scan = a_scan->next;
+    }
+    
+
+    // t_result_port *s;
+
+    
+    // while (lst)
+    // {
+    //     s = (t_result_port *)lst->content;
+
+    //     printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",s->port_nbr,port_state_str(s->syn),port_state_str(s->nul),port_state_str(s->fin),port_state_str(s->xmas),port_state_str(s->ack),port_state_str(s->udp));
+    //     lst = lst->next;
+    // }
+
+   
 }

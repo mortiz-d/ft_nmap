@@ -5,7 +5,7 @@
 #define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
-#define DEBUG 0
+#define DEBUG 1
 #define NI_MAXHOST 1025
 
 #define MIN_PORT_RANGE 0
@@ -132,6 +132,7 @@ struct s_scan_tasks{
     struct s_scan_task *head;
 };
 
+
 //FLAGS FUNCTIONS
 t_list *flags_config (void);
 
@@ -140,6 +141,7 @@ t_list *flags_config (void);
 t_params *params_default_config (void);
 t_params *get_params (int argc, char **argv);
 void free_params(t_params *params);
+void free_result(void *result);
 
 
 //DEBUG
@@ -154,6 +156,7 @@ char *dns_lookup(char *host);
 int get_local_ip(char *dest_ip, char *out_ip);
 void generate_result_table(t_params *params);
 void reset_all_results(t_list **results, t_list *scans);
+void print_result_table(t_params *params);
 
 
 //TCP (BUILD -> SEND -> RECIEVE -> PROCESS)

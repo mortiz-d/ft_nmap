@@ -17,6 +17,7 @@ SRCS =	srcs/main.c   \
 		srcs/udp/send.c \
 		srcs/a_pck_scan.c \
 		srcs/a_pck_capture.c \
+		srcs/table/table.c \
 		srcs/socket.c 
 
 # FLAGS #

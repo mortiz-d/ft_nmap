@@ -39,7 +39,9 @@ int main(int argc, char **argv)
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
-    // main_scan_logic(params);
+    main_scan_logic(params);
+
+    print_result_table(params);
 
     //This process the nmap
     // ip_selected = *params->ip_list;

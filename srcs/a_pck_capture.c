@@ -35,7 +35,8 @@ char *create_filter(t_params *params){
     free(temp);
     free(port_str);
 
-    printf("filter is %s\n", filter);
+    if (DEBUG)
+        printf("filter is %s\n", filter);
     // free(temp);
     return filter;
 }
@@ -62,7 +63,7 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
     params->n_packet_recieved = 0;
 
     filter = create_filter(params);
-    printf("FILTER -> %s\n",filter);
+    // printf("FILTER -> %s\n",filter);
     pcap_compile(handle, fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, fp);
     pcap_setnonblock(handle, 1, errbuf);
@@ -76,7 +77,7 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
 void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp){
     time_t      start;
 
-    printf("Oidos listos\n");
+    // printf("Oidos listos\n");
     start = time(NULL);
     while ( params->n_packet_sended < (params->n_ports * ft_lstsize(*params->ip_list)) )
     {

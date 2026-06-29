@@ -104,34 +104,7 @@ void *send_scans(void *args){
     return NULL;
 }
 
-// static const char *port_state_str(t_port_state state)
-// {
-//     switch (state)
-//     {
-//         case PORT_OPEN:
-//             return "OPEN";
-//             break;
-//         case PORT_CLOSED:
-//             return "CLOSED";
-//             break;
-//         case PORT_FILTERED:
-//             return "FILTERED";
-//             break;
-//         case PORT_UNFILTERED:
-//             return "UNFILTERED";
-//             break; 
-//         case PORT_UNCALLED:
-//             return "----------";
-//             break;
-//         case PORT_OPENFILTERED:
-//             return "OP|FILT";
-//             break;
-        
-//         default:
-//             break;
-//     }
-//     return "UNKNOWN";
-// }
+
 
 // void print_result_table(t_list *lst)
 // {
@@ -202,13 +175,9 @@ void main_scan_logic(t_params* args){
         }
         args->active_scan = *scan;
 
-            // printf("Executing %i tasks in %i threads\n", task_count, args->threads);
-
-
         if(DEBUG)
             printf("Executing %i tasks in %i threads\n", task_count, args->threads);
 
-        // Armar el sniffer ANTES de enviar para no perder respuestas
         struct bpf_program fp;
         pcap_if_t *dev_lst = NULL;
         pcap_t *handle = capture_setup(args, &fp, &dev_lst);
@@ -223,7 +192,6 @@ void main_scan_logic(t_params* args){
             pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
         }
 
-        // Escuchar mientras los emisores envían
         capture_listen(args, handle, dev_lst, &fp);
 
         for (int i = 0; i < args->threads; ++i){
