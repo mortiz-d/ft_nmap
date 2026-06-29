@@ -39,19 +39,19 @@ int main(int argc, char **argv)
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
+    // main_scan_logic(params);
 
     //This process the nmap
-
-    ip_selected = *params->ip_list;
-    while (ip_selected)
-    {
-        printf("argv->%s\n", (char *)ip_selected->content);
-        aux = dns_lookup((char *)ip_selected->content);
-        get_local_ip(aux, params->internal_ip);
-        params->active_ip = aux;
-        main_scan_logic(params);
-        free(aux);
-        ip_selected = ip_selected->next;
-    }
+    // ip_selected = *params->ip_list;
+    // while (ip_selected)
+    // {
+    //     printf("argv->%s\n", (char *)ip_selected->content);
+    //     aux = dns_lookup((char *)ip_selected->content);
+    //     get_local_ip(aux, params->internal_ip);
+    //     params->active_ip = aux;
+    //     main_scan_logic(params);
+    //     free(aux);
+    //     ip_selected = ip_selected->next;
+    // }
     return free_all(flags, params);
 }

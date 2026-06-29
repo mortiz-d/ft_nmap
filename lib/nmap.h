@@ -5,7 +5,7 @@
 #define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
-#define DEBUG 1
+#define DEBUG 0
 #define NI_MAXHOST 1025
 
 #define MIN_PORT_RANGE 0
@@ -92,7 +92,7 @@ typedef struct s_params
 
 }	t_params;
 
-typedef struct s_result_scan
+typedef struct s_result_port
 {
     int    port_nbr;
     t_port_state syn;
@@ -101,6 +101,12 @@ typedef struct s_result_scan
     t_port_state xmas;
     t_port_state ack;
     t_port_state udp;
+}	t_result_port;
+
+typedef struct s_result_scan
+{
+    char * ip;
+    t_list **port;
 }	t_result_scan;
 
 
@@ -162,16 +168,11 @@ int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int por
 void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
 
 
-void main_scan_logic(t_params* args);
-
-//CAPTURE
-void capture_packets(t_params *params);
-
-
 //SCAN
 void main_scan_logic(t_params* args);
 
 //CAPTURE
-void capture_packets();
+pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_lst);
+void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp);
 
 #endif

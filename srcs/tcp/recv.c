@@ -43,12 +43,12 @@ t_port_state determine_status_tcp (struct tcphdr *tcp, t_scan scan_type)
 void alter_port_status (t_params *params, int port , t_port_state state, t_scan scan_type)
 {
     t_list *res = NULL;
-    t_result_scan *aux;
+    t_result_port *aux;
     
     res = *(params->results);
     while (res)
     {
-        aux = (t_result_scan *)res->content;
+        aux = (t_result_port *)res->content;
         if (aux->port_nbr == port)
         {
             switch (scan_type)
@@ -107,19 +107,19 @@ void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
         params->n_packet_recieved++;
 
     }
-    else
-    {
-        if ((tcp->th_flags & TH_RST) == 0)
-            params->n_packet_sended++;
-        if (DEBUG)
-            printf("SEND  [%s:%d] → [%s:%d] | flags: %s%s%s%s%s%s | len: %d bytes\n", src_ip, ntohs(tcp->th_sport), dst_ip, ntohs(tcp->th_dport),
-            tcp->th_flags & TH_SYN  ? "SYN " : "",
-            tcp->th_flags & TH_ACK  ? "ACK " : "",
-            tcp->th_flags & TH_RST  ? "RST " : "",
-            tcp->th_flags & TH_FIN  ? "FIN " : "",
-            tcp->th_flags & TH_PUSH ? "PSH " : "",
-            tcp->th_flags & TH_URG  ? "URG " : "",
-            hdr->len
-            );
-    }
+    // else
+    // {
+    //     // if ((tcp->th_flags & TH_RST) == 0)
+    //     //     params->n_packet_sended++;
+    //     if (DEBUG)
+    //         printf("SEND  [%s:%d] → [%s:%d] | flags: %s%s%s%s%s%s | len: %d bytes\n", src_ip, ntohs(tcp->th_sport), dst_ip, ntohs(tcp->th_dport),
+    //         tcp->th_flags & TH_SYN  ? "SYN " : "",
+    //         tcp->th_flags & TH_ACK  ? "ACK " : "",
+    //         tcp->th_flags & TH_RST  ? "RST " : "",
+    //         tcp->th_flags & TH_FIN  ? "FIN " : "",
+    //         tcp->th_flags & TH_PUSH ? "PSH " : "",
+    //         tcp->th_flags & TH_URG  ? "URG " : "",
+    //         hdr->len
+    //         );
+    // }
 }

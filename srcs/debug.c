@@ -2,6 +2,32 @@
 
 // #include "../lib/nmap.h"
 
+static void print_result_table(t_list *lst)
+{
+    t_result_scan *table;
+        t_result_port *tport;
+
+    t_list *port;
+    while (lst)
+    {
+
+        table = (t_result_scan *)lst->content;
+        printf("Result table\n");
+        // printf("table: %p\n",table);
+        printf("ip: %s\n",table->ip);
+        port = *table->port;
+        // t_result_port
+        while (port)
+        {
+            tport = (t_result_port *)port->content;
+            ft_printf ("%d %i %i %i %i %i %i\n", tport->port_nbr, tport->syn, tport->ack , tport->nul , tport->fin , tport->xmas , tport->udp);
+            port = port->next;
+        }
+
+        lst = lst->next;    
+    }
+}
+
 static void print_ports(t_list *lst)
 {
     t_port *p;
@@ -85,6 +111,12 @@ void debug_params(t_params *params)
         print_scans(*params->scan);
     else
         printf("No scans\n");
+
+    printf("\n--- RESULT TABLE ---\n");
+    if (params->results)
+        print_result_table(*params->results);
+    else
+        printf("No result table\n");
 
     printf("======= END DEBUG =======\n");
 }

@@ -3,12 +3,12 @@
 void alter_port_status_udp (t_params *params, int port , t_port_state state)
 {
     t_list *res = NULL;
-    t_result_scan *aux;
+    t_result_port *aux;
     
     res = *(params->results);
     while (res)
     {
-        aux = (t_result_scan *)res->content;
+        aux = (t_result_port *)res->content;
         if (aux->port_nbr == port)
         {
             aux->udp = state;        
@@ -35,19 +35,19 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
     {
         udp = (struct udphdr *)(pkt + 14 + ip->ihl * 4);
 
-        if (!ft_strncmp(src_ip, params->internal_ip, INET_ADDRSTRLEN))
-        {
-            if (DEBUG)
-                printf("SEND UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
-            params->n_packet_sended++;
-        }
-        else
-        {
+        // if (!ft_strncmp(src_ip, params->internal_ip, INET_ADDRSTRLEN))
+        // {
+        //     if (DEBUG)
+        //         printf("SEND UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
+        //     params->n_packet_sended++;
+        // }
+        // else
+        // {
             if (DEBUG)
                 printf("RECV UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
             alter_port_status_udp( params, ntohs(udp->uh_sport), PORT_OPEN);
             params->n_packet_recieved++;
-        }
+        // }
     }
     else if (ip->protocol == IPPROTO_ICMP) //ICMP
     {
