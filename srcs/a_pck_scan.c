@@ -35,11 +35,11 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
 
     char packet[4096];
     int sockfd;
-    
+
     if (scan != UDP_SCAN)
-        sockfd = socket_connection_tcp(params); //TCP
+        sockfd = socket_connection_tcp(addr); //TCP
     else
-        sockfd = socket_connection_udp(params); //UDP
+        sockfd = socket_connection_udp(addr); //UDP
 
 
     if (sockfd < 0)
@@ -58,7 +58,7 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
     {
         send_probe_udp(sockfd,addr,params,port);
     }
-    
+
     close(sockfd);
     ft_bzero(packet, sizeof(packet));
     return;
@@ -85,9 +85,11 @@ void *send_scans(void *args){
         if (!task) return NULL;
 
         //PRUEBAS----
-        printf("sended %i %s p=%i s=%i\n", task->t_id, task->ip, task->port, task->scan);
+        // printf("sended %i %s p=%i s=%i\n", task->t_id, task->ip, task->port, task->scan);
         // sleep(1);
         //----
+
+
         ft_memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
     
@@ -96,6 +98,8 @@ void *send_scans(void *args){
             printf("Invalid IP -> %s\n", task->ip);
             return NULL;
         }
+
+
         scan_port(task_args->params,addr, task->port, (t_scan)task->scan);
         
         free(task->ip);
@@ -103,28 +107,6 @@ void *send_scans(void *args){
     }
     return NULL;
 }
-
-
-
-// void print_result_table(t_list *lst)
-// {
-//     t_result_port *s;
-
-//     printf("\n");
-//     printf("+--------+------------+------------+------------+------------+------------+------------+\n");
-//     printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
-//     printf("+--------+------------+------------+------------+------------+------------+------------+\n");
-
-//     while (lst)
-//     {
-//         s = (t_result_port *)lst->content;
-
-//         printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",s->port_nbr,port_state_str(s->syn),port_state_str(s->nul),port_state_str(s->fin),port_state_str(s->xmas),port_state_str(s->ack),port_state_str(s->udp));
-//         lst = lst->next;
-//     }
-
-//     printf("+--------+------------+------------+------------+------------+------------+------------+\n");
-// }
 
 void main_scan_logic(t_params* args){
     t_list *ips = *args->ip_list;
@@ -140,7 +122,6 @@ void main_scan_logic(t_params* args){
 
     pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
 
-    // aux = ;
     get_local_ip(dns_lookup((char *)ips->content), args->internal_ip);
     
     int task_count = 0;
@@ -152,7 +133,6 @@ void main_scan_logic(t_params* args){
         while (ips){
             
             ip = (char *)ips->content;
-            // printf("IPS -> %s \n",ip);
             
             for (t_list *ports = *args->ports; ports; ports = ports->next){
                 prt = (t_port *)ports->content;
@@ -169,7 +149,7 @@ void main_scan_logic(t_params* args){
                 else
                     head = ptr;
                 tail = ptr;
-                printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
+                // printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
             }
             ips = ips->next;
         }
@@ -201,8 +181,4 @@ void main_scan_logic(t_params* args){
         head = NULL;
         tail = NULL;
     }
-
-    // print_result_table(*args->results);
-    // reset_all_results(args->results, *args->scan);
-    // clean_result_table(*args->results);
 }

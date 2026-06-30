@@ -31,25 +31,16 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
     inet_ntop(AF_INET, &ip->saddr, src_ip, sizeof(src_ip));
     inet_ntop(AF_INET, &ip->daddr, dst_ip, sizeof(dst_ip));
 
-    if (ip->protocol == IPPROTO_UDP) //UDP
-    {
-        udp = (struct udphdr *)(pkt + 14 + ip->ihl * 4);
+    udp = (struct udphdr *)(pkt + 14 + ip->ihl * 4);
 
-        // if (!ft_strncmp(src_ip, params->internal_ip, INET_ADDRSTRLEN))
-        // {
-        //     if (DEBUG)
-        //         printf("SEND UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
-        //     params->n_packet_sended++;
-        // }
-        // else
-        // {
-            if (DEBUG)
-                printf("RECV UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
-            alter_port_status_udp( params, ntohs(udp->uh_sport), PORT_OPEN);
-            params->n_packet_recieved++;
-        // }
+    if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN) && ip->protocol == IPPROTO_UDP) //UDP
+    {
+
+        if (DEBUG)
+            printf("RECV UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
+        params->n_packet_recieved++;
     }
-    else if (ip->protocol == IPPROTO_ICMP) //ICMP
+    else if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN) && ip->protocol == IPPROTO_ICMP) //ICMP
     {
         icmp = (struct icmphdr *)(pkt + 14 + ip->ihl * 4);
 
@@ -60,8 +51,8 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
 
             if (DEBUG)
                 printf("RECV ICMP [%s] -> [%s] | type=%d code=%d | UDP port CLOSED: %d | len: %d bytes\n", src_ip, dst_ip, icmp->type, icmp->code, ntohs(orig_udp->uh_dport),hdr->len);
-
-            alter_port_status_udp(params,ntohs(orig_udp->uh_dport),PORT_CLOSED);
+            modify_result_table (params, src_ip, ntohs(orig_udp->uh_dport), PORT_CLOSED);
+            // alter_port_status_udp(params,ntohs(orig_udp->uh_dport),PORT_CLOSED);
             params->n_packet_recieved++;
         }
     }

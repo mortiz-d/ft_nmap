@@ -6,6 +6,7 @@ char *create_filter(t_params *params){
     char *temp = NULL;
     t_list *ips = *params->ip_list;
     char *ip = NULL;
+    char *port_str = NULL;
 
     int i = 0;
     while (ips){
@@ -21,19 +22,25 @@ char *create_filter(t_params *params){
         ++i;
     }
     
-    char *port_str = ft_itoa(SOURCE_PORT);
+    if (params->active_scan != UDP_SCAN)
+        port_str = ft_itoa(UDP_DEFAULT_BASE_PORT);
+
+
 
     temp = filter;
     if (params->active_scan == UDP_SCAN)
-        filter = ft_strjoin(filter, ") and udp and dst port ");
+        filter = ft_strjoin(filter, ") and (udp or icmp)");
     else
         filter = ft_strjoin(filter, ") and tcp and dst port ");
     free(temp);
 
-    temp = filter;
-    filter = ft_strjoin(filter, port_str);
-    free(temp);
-    free(port_str);
+    if (params->active_scan != UDP_SCAN)
+    {
+        temp = filter;
+        filter = ft_strjoin(filter, port_str);
+        free(temp);
+        free(port_str);
+    }
 
     if (DEBUG)
         printf("filter is %s\n", filter);
@@ -63,12 +70,12 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
     params->n_packet_recieved = 0;
 
     filter = create_filter(params);
-    // printf("FILTER -> %s\n",filter);
+    if (DEBUG)
+        printf("FILTER -> %s\n",filter);
     pcap_compile(handle, fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, fp);
     pcap_setnonblock(handle, 1, errbuf);
     free(filter);
-
     if (DEBUG)
         printf("PCAP : ready for scans\n");
     return handle;
@@ -77,7 +84,6 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
 void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp){
     time_t      start;
 
-    // printf("Oidos listos\n");
     start = time(NULL);
     while ( params->n_packet_sended < (params->n_ports * ft_lstsize(*params->ip_list)) )
     {

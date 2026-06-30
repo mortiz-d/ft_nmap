@@ -14,10 +14,8 @@ static void debug_print_result_table(t_list *lst)
 
         table = (t_result_scan *)lst->content;
         printf("Result table %p \n",table );
-        // printf("table: %p\n",table);
         printf("ip: %s - %p\n",table->ip,table->ip);
         port = *table->port;
-        // t_result_port
         while (port)
         {
             tport = (t_result_port *)port->content;

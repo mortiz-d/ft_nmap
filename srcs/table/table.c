@@ -1,5 +1,22 @@
 #include "../../lib/nmap.h"
 
+static int cmp_ip(void *a, void *b)
+{
+    t_result_scan *aux = a;
+
+    if (ft_strncmp(aux->ip,(char *)b,sizeof(INET_ADDRSTRLEN)) == 0)
+        return 1;
+    return 0;
+}
+
+static int cmp_port(void *a, void *b)
+{
+    t_result_port *aux = a;
+    uint16_t port = *(uint16_t *)b;
+
+    return aux->port_nbr == port;
+}
+
 void free_result(void *result)
 {
     t_result_scan *scan;
@@ -89,10 +106,36 @@ t_result_port * generate_default_port (t_params *params, t_port *port)
     return r_scan;
 }
 
+void alter_port_status (t_params *params, t_list *port,  t_port_state state)
+{
+    t_result_port *aux = port->content;
+    switch (params->active_scan)
+    {
+        case SYN_SCAN:
+            aux->syn = state;
+            break;
+        case NUL_SCAN:
+            aux->nul = state;
+            break;
+        case FIN_SCAN:
+            aux->fin = state;
+            break;
+        case XMAS_SCAN:
+            aux->xmas = state;
+            break;
+        case ACK_SCAN:
+            aux->ack = state;
+            break;
+        case UDP_SCAN:
+            aux->udp = state;
+        default:
+            break;
+    }  
+}
+
 void generate_result_table(t_params *params)
 {
-    (void)params;
-    ft_printf("WOLOLO\n"); 
+    (void)params; 
     t_list **lst_res = ft_calloc(1,sizeof(t_list*));
     t_list **lst_ports = NULL;
     t_list *ips, *ports;
@@ -121,6 +164,16 @@ void generate_result_table(t_params *params)
     }
     params->results = lst_res;
 }
+
+void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state)
+{
+    t_list *ip_result = ft_lstfind_match(*params->results, cmp_ip, ip);
+    t_list *ip_port_result = ft_lstfind_match( *((t_result_scan *)ip_result->content)->port , cmp_port, &port);
+
+    alter_port_status(params,ip_port_result,state);
+}
+
+
 
 
 void print_result_table(t_params *params)

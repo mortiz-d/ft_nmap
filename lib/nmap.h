@@ -160,15 +160,18 @@ void print_result_table(t_params *params);
 
 
 //TCP (BUILD -> SEND -> RECIEVE -> PROCESS)
-int socket_connection_tcp(t_params *params);
+int socket_connection_tcp(struct sockaddr_in addr);
 void build_packet_tcp(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type);
 int send_packet_tcp(int sockfd, char *packet, struct sockaddr_in addr);
 void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
 
 //UDP ( SEND -> RECIEVE -> PROCESS)
-int socket_connection_udp(t_params *params);
+int socket_connection_udp(struct sockaddr_in addr);
 int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int port);
 void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
+
+
+void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state);
 
 
 //SCAN
