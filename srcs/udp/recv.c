@@ -1,22 +1,5 @@
 #include "../../lib/nmap.h"
 
-void alter_port_status_udp (t_params *params, int port , t_port_state state)
-{
-    t_list *res = NULL;
-    t_result_port *aux;
-    
-    res = *(params->results);
-    while (res)
-    {
-        aux = (t_result_port *)res->content;
-        if (aux->port_nbr == port)
-        {
-            aux->udp = state;        
-        }
-        res = res->next;
-    }
-}
-
 void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt)
 {
     char src_ip[INET_ADDRSTRLEN];
@@ -35,13 +18,15 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
 
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN) && ip->protocol == IPPROTO_UDP) //UDP
     {
-
+        //if header is UDP its open
         if (DEBUG)
             printf("RECV UDP [%s:%d] -> [%s:%d] | len: %d bytes\n", src_ip, ntohs(udp->uh_sport), dst_ip, ntohs(udp->uh_dport), hdr->len);
+        modify_result_table (params, src_ip, ntohs(udp->uh_sport), PORT_OPEN);
         params->n_packet_recieved++;
     }
     else if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN) && ip->protocol == IPPROTO_ICMP) //ICMP
     {
+        //if header is ICMP its closed
         icmp = (struct icmphdr *)(pkt + 14 + ip->ihl * 4);
 
         if (icmp->type == 3 && icmp->code == 3)
@@ -52,7 +37,6 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
             if (DEBUG)
                 printf("RECV ICMP [%s] -> [%s] | type=%d code=%d | UDP port CLOSED: %d | len: %d bytes\n", src_ip, dst_ip, icmp->type, icmp->code, ntohs(orig_udp->uh_dport),hdr->len);
             modify_result_table (params, src_ip, ntohs(orig_udp->uh_dport), PORT_CLOSED);
-            // alter_port_status_udp(params,ntohs(orig_udp->uh_dport),PORT_CLOSED);
             params->n_packet_recieved++;
         }
     }

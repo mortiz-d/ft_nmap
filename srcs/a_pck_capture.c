@@ -23,7 +23,7 @@ char *create_filter(t_params *params){
     }
     
     if (params->active_scan != UDP_SCAN)
-        port_str = ft_itoa(UDP_DEFAULT_BASE_PORT);
+        port_str = ft_itoa(SOURCE_PORT);
 
 
 
@@ -81,11 +81,11 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
     return handle;
 }
 
-void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp){
+void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp, int expected){
     time_t      start;
 
     start = time(NULL);
-    while ( params->n_packet_sended < (params->n_ports * ft_lstsize(*params->ip_list)) )
+    while ( params->n_packet_sended < expected )
     {
         if (params->active_scan == UDP_SCAN)
             pcap_dispatch(handle, -1, packet_handler_udp, (u_char *)params);

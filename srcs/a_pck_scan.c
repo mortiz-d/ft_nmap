@@ -1,36 +1,5 @@
 #include "../lib/nmap.h"
 
-uint16_t calculate_checksum(void *data, int len) {
-    unsigned short *buf = data;
-    unsigned int sum = 0;
-    unsigned short result;
-
-    for (sum = 0; len > 1; len -= 2)
-        sum += *buf++;
-    if (len == 1)
-        sum += *(unsigned char *)buf;
-    sum = (sum >> 16) + (sum & 0xFFFF);
-    sum += (sum >> 16);
-    result = ~sum;
-    return result;
-}
-
-//Desechar probablemente
-void fill_packet_tcp(t_packet *pck, int port, char *ip, int scan){
-    ft_bzero(pck, sizeof(*pck));
-    pck->header.th_dport = htons(port);
-    // pck->header.th_ulen  = htons(sizeof(*pck));
-    pck->header.th_flags = TH_SYN;
-    pck->header.th_off = 5;
-    // pck->header.syn = 1;
-    // pck->header.ack = 0;
-    pck->header.th_sum = calculate_checksum(pck, sizeof(*pck));
-
-    pck->ip = ip;
-    pck->port = port;
-    pck->scan = scan;
-}
-
 void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan){
 
     char packet[4096];
@@ -75,73 +44,187 @@ static t_scan_task *dequeue(t_scan_task **head){
 void *send_scans(void *args){
     struct s_scan_tasks *task_args = (struct s_scan_tasks *)args;
     struct sockaddr_in addr;
-    
+
     while (1) {
         pthread_mutex_lock(task_args->queue_lock);
         t_scan_task *task = dequeue(&task_args->head);
-        task_args->params->n_packet_sended++;
         pthread_mutex_unlock(task_args->queue_lock);
-        
+
         if (!task) return NULL;
-
-        //PRUEBAS----
-        // printf("sended %i %s p=%i s=%i\n", task->t_id, task->ip, task->port, task->scan);
-        // sleep(1);
-        //----
-
 
         ft_memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-    
+
         if (inet_pton(AF_INET, task->ip, &addr.sin_addr) <= 0)
-        {
             printf("Invalid IP -> %s\n", task->ip);
-            return NULL;
+        else
+        {
+            scan_port(task_args->params,addr, task->port, (t_scan)task->scan);
+
+            // delay for udp scan
+            if ((t_scan)task->scan == UDP_SCAN)
+                usleep(task_args->params->udp_delay_us);
         }
 
+        // contamos solo tareas reales (tras procesarlas), asi 'expected' es exacto
+        pthread_mutex_lock(task_args->queue_lock);
+        task_args->params->n_packet_sended++;
+        pthread_mutex_unlock(task_args->queue_lock);
 
-        scan_port(task_args->params,addr, task->port, (t_scan)task->scan);
-        
         free(task->ip);
         free(task);
     }
     return NULL;
 }
 
-void main_scan_logic(t_params* args){
-    t_list *ips = *args->ip_list;
-    char *ip = NULL;
+static void free_task_queue(t_scan_task *head)
+{
+    t_scan_task *tmp;
 
-    t_port *prt = NULL;
-    int port = 0;
-    t_scan *scan = NULL;
+    while (head)
+    {
+        tmp = head->next;
+        free(head->ip);
+        free(head);
+        head = tmp;
+    }
+}
 
-    t_scan_task *head = NULL;
-    t_scan_task *tail = NULL;
-    t_scan_task *ptr = NULL;
+// Makes a queue with all open|filtered udp ports
+static int build_udp_retry_queue(t_params *args, t_scan_task **head, t_scan_task **tail, int scan)
+{
+    t_list          *res = *args->results;
+    t_result_scan   *rs;
+    t_list          *p;
+    t_result_port   *rp;
+    t_scan_task     *t;
+    int             count = 0;
 
+    *head = NULL;
+    *tail = NULL;
+    while (res)
+    {
+        rs = res->content;
+        p = *rs->port;
+        while (p)
+        {
+            rp = p->content;
+            if (rp->udp == PORT_OPENFILTERED)
+            {
+                t = malloc(sizeof(t_scan_task));
+                t->t_id = ++count;
+                t->port = rp->port_nbr;
+                t->ip = ft_strdup(rs->ip);
+                t->scan = scan;
+                t->next = NULL;
+                if (*tail)
+                    (*tail)->next = t;
+                else
+                    *head = t;
+                *tail = t;
+            }
+            p = p->next;
+        }
+        res = res->next;
+    }
+    return count;
+}
+
+// Does a run sending all requests and capturing/processing
+static void run_scan_pass(t_params *args, t_scan_task *head, int expected)
+{
     pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
+    struct bpf_program fp;
+    pcap_if_t *dev_lst = NULL;
+    pcap_t *handle;
+    pthread_t *sender_threads;
 
-    get_local_ip(dns_lookup((char *)ips->content), args->internal_ip);
+    handle = capture_setup(args, &fp, &dev_lst);
+    if (!handle){
+        printf("Error: no se pudo iniciar la captura\n");
+        free_task_queue(head);
+        return;
+    }
+
+    struct s_scan_tasks task_args = {&queue_lock, args, head};
+    sender_threads = malloc(sizeof(pthread_t) * args->threads);
+    for (int i = 0; i < args->threads; ++i)
+        pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
+
+    capture_listen(args, handle, dev_lst, &fp, expected);
+
+    for (int i = 0; i < args->threads; ++i)
+        pthread_join(sender_threads[i], NULL);
+    free(sender_threads);
+}
+
+static void udp_retransmit(t_params *args, int scan, int total_ports)
+{
+    int prev_remaining = total_ports + 1;
+    t_scan_task *rhead, *rtail;
+    int remaining, sent , dropped , new_delay;
     
-    int task_count = 0;
+    for (int retry = 0; retry < UDP_MAX_RETRIES; ++retry){
+        sent = args->n_packet_sended;
+        dropped = sent - args->n_packet_recieved;
+
+        if (sent > 0 && (dropped * 100 / sent) > UDP_DROP_THRESHOLD_PCT && args->udp_delay_us < UDP_MAX_DELAY_US)
+        {
+            new_delay = args->udp_delay_us * 2;
+            if (new_delay > UDP_MAX_DELAY_US)
+                new_delay = UDP_MAX_DELAY_US;
+            if (DEBUG)
+                printf("Increasing send delay: %i -> %i us (%i/%i probes dropped)\n", args->udp_delay_us, new_delay, dropped, sent);
+            args->udp_delay_us = new_delay;
+        }
+
+        remaining = build_udp_retry_queue(args, &rhead, &rtail, scan);
+        if (remaining == 0)
+            break;
+        
+        // when there is no new updates that means we have run out of closed ports
+        if (remaining >= prev_remaining && args->udp_delay_us >= UDP_MAX_DELAY_US){
+            free_task_queue(rhead);
+            break;
+        }
+        prev_remaining = remaining;
+
+        if (DEBUG)
+            printf("UDP retry %i/%i: %i puertos pendientes (delay %i us)\n",
+                   retry + 1, UDP_MAX_RETRIES, remaining, args->udp_delay_us);
+        usleep(UDP_RETRY_WAIT_US);
+        run_scan_pass(args, rhead, remaining);
+    }
+}
+
+void main_scan_logic(t_params* args){
+    t_list      *ips = *args->ip_list;
+    t_list      *ports;
+    t_scan      *scan;
+    t_scan_task *head, *tail, *ptr;
+    char        *local_dst;
+    int         task_count;
+
+    local_dst = dns_lookup((char *)ips->content);
+    if (local_dst){
+        get_local_ip(local_dst, args->internal_ip);
+        free(local_dst);
+    }
+
     for (t_list *scans = *args->scan; scans; scans = scans->next){
         scan = (t_scan *)scans->content;
+        args->active_scan = *scan;
+
+        head = NULL;
+        tail = NULL;
+        task_count = 0;
         ips = *args->ip_list;
-
-
         while (ips){
-            
-            ip = (char *)ips->content;
-            
-            for (t_list *ports = *args->ports; ports; ports = ports->next){
-                prt = (t_port *)ports->content;
-                port = prt->port_nbr;
-                ++task_count;
+            for (ports = *args->ports; ports; ports = ports->next){
                 ptr = malloc(sizeof(t_scan_task));
-                ptr->t_id = task_count;
-                ptr->port = port;
-                ptr->ip = ft_strdup(ip);
+                ptr->t_id = ++task_count;
+                ptr->port = ((t_port *)ports->content)->port_nbr;
+                ptr->ip = ft_strdup((char *)ips->content);
                 ptr->scan = *scan;
                 ptr->next = NULL;
                 if (tail)
@@ -149,36 +232,15 @@ void main_scan_logic(t_params* args){
                 else
                     head = ptr;
                 tail = ptr;
-                // printf("task %i created ip = %s scan = %i port = %i\n",task_count, ip,*scan, port);
             }
             ips = ips->next;
         }
-        args->active_scan = *scan;
 
-        if(DEBUG)
+        if (DEBUG)
             printf("Executing %i tasks in %i threads\n", task_count, args->threads);
+        run_scan_pass(args, head, task_count);
 
-        struct bpf_program fp;
-        pcap_if_t *dev_lst = NULL;
-        pcap_t *handle = capture_setup(args, &fp, &dev_lst);
-        if (!handle){
-            printf("Error: no se pudo iniciar la captura\n");
-            return;
-        }
-
-        struct s_scan_tasks task_args = {&queue_lock, args, head};
-        pthread_t *sender_threads = malloc(sizeof(pthread_t) * args->threads);
-        for (int i = 0; i < args->threads; ++i){
-            pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
-        }
-
-        capture_listen(args, handle, dev_lst, &fp);
-
-        for (int i = 0; i < args->threads; ++i){
-            pthread_join(sender_threads[i], NULL);
-        }
-        free(sender_threads);
-        head = NULL;
-        tail = NULL;
+        if (*scan == UDP_SCAN)
+            udp_retransmit(args, *scan, task_count);
     }
 }

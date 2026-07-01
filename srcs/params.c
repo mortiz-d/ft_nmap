@@ -46,6 +46,31 @@ static bool check_integer(char *str)
     return true;
 }
 
+static int match_port(void *content, void *ctx)
+{
+    t_port *p = content;
+    int *nbr = ctx;
+
+    if (!p || !nbr)
+        return 0;
+    return (p->port_nbr == *nbr);
+}
+
+static int port_exists(t_list **lst, int port_nbr)
+{
+    if (!lst || !*lst)
+        return 0;
+    return (ft_lstfind_match(*lst, match_port, &port_nbr) != NULL);
+}
+
+static int cmp_port(void *a, void *b)
+{
+    t_port *pa = a;
+    t_port *pb = b;
+
+    return (pa->port_nbr - pb->port_nbr);
+}
+
 static int add_port_range(t_list **lst, char* str )
 {
     t_port *aux;
@@ -69,6 +94,8 @@ static int add_port_range(t_list **lst, char* str )
             {
                 for (int p = min; p <= max; p++)
                 {
+                    if (port_exists(lst, p))
+                        continue;
                     aux = ft_calloc(1, sizeof(t_port));
                     aux->port_nbr = p;
                     ft_lstadd_back(lst, ft_lstnew(aux));
@@ -158,6 +185,11 @@ static int create_port (t_list **lst,char *str)
         free(aux);
         return 0;
     }
+    if (port_exists(lst, aux->port_nbr))
+    {
+        free(aux);
+        return 1;
+    }
 
     ft_lstadd_back(lst,ft_lstnew(aux));
     return 1;
@@ -190,6 +222,7 @@ static int extract_ports(t_params *params, char* str)
             }
         }
     }
+    ft_lstsort(*lst_ports, cmp_port);
     params->ports = lst_ports;
     params->n_ports = ft_lstsize(*lst_ports);
     
@@ -201,6 +234,23 @@ static int extract_ports(t_params *params, char* str)
 
 }
 
+static int match_ip(void *content, void *ctx)
+{
+    char *ip = content;
+    char *target = ctx;
+
+    if (!ip || !target)
+        return 0;
+    return (ft_strncmp(ip, target, ft_strlen(ip) + 1) == 0);
+}
+
+static int ip_exists(t_list **lst, char *ip)
+{
+    if (!lst || !*lst || !ip)
+        return 0;
+    return (ft_lstfind_match(*lst, match_ip, ip) != NULL);
+}
+
 static t_list *extract_ip_lists(t_params *params, char *filename)
 {
     t_list *lst_ips = NULL;
@@ -210,13 +260,16 @@ static t_list *extract_ip_lists(t_params *params, char *filename)
     fd = open(filename, O_RDONLY);
     if (fd < 0)
         return NULL;
-    aux = get_next_line(fd);    
+    aux = get_next_line(fd);
     while (aux)
     {
         aux2 = ft_strtrim(aux, " \t\r\n");
         free(aux);
 
-        ft_lstadd_back(params->ip_list,ft_lstnew(aux2));
+        if (aux2 && *aux2 && !ip_exists(params->ip_list, aux2))
+            ft_lstadd_back(params->ip_list, ft_lstnew(aux2));
+        else
+            free(aux2);
         aux = get_next_line(fd);
     }
     close(fd);
@@ -258,6 +311,8 @@ int apply_ip(t_flag *flag, t_params *params)
 {
     if (!params->ip_list)
         params->ip_list = ft_calloc(1,sizeof(t_list*));
+    if (ip_exists(params->ip_list, flag->value.str_value))
+        return 1;
     ft_lstadd_back(params->ip_list ,extract_ip(flag->value.str_value));//  ft_strdup(flag->value.str_value);
     return 1;
 }
@@ -309,6 +364,7 @@ t_params *params_default_config (void)
     param->threads = 1;
     param->scan = NULL;
     param->ip_list = NULL;
+    param->udp_delay_us = UDP_PROBE_DELAY_US;
     extract_ports(param,"0-1023");
     extract_scan(param,"SYN/NUL/FIN/XMAS/ACK/UDP");
     // extract_scan(param,"UDP");

@@ -1,4 +1,3 @@
-//#include <studio.h>
 #include "../lib/nmap.h"
 
 int free_all(t_list *flags, t_params *params)
@@ -23,7 +22,7 @@ int main(int argc, char **argv)
     }
 
     generate_result_table(params);
-    // debug_params(params);
+    debug_params(params);
     if (params->help == 1)
     {
         return free_all(flags, params);

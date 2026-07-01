@@ -4,7 +4,7 @@ static int cmp_ip(void *a, void *b)
 {
     t_result_scan *aux = a;
 
-    if (ft_strncmp(aux->ip,(char *)b,sizeof(INET_ADDRSTRLEN)) == 0)
+    if (ft_strncmp(aux->ip,(char *)b,INET_ADDRSTRLEN) == 0)
         return 1;
     return 0;
 }
@@ -167,10 +167,14 @@ void generate_result_table(t_params *params)
 
 void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state)
 {
-    t_list *ip_result = ft_lstfind_match(*params->results, cmp_ip, ip);
-    t_list *ip_port_result = ft_lstfind_match( *((t_result_scan *)ip_result->content)->port , cmp_port, &port);
+    t_list *ip_result = NULL;
+    t_list *ip_port_result = NULL;
 
-    alter_port_status(params,ip_port_result,state);
+    ip_result = ft_lstfind_match(*params->results, cmp_ip, ip);
+    if (ip_result)
+        ip_port_result = ft_lstfind_match( *((t_result_scan *)ip_result->content)->port , cmp_port, &port);
+    if (ip_port_result)
+        alter_port_status(params,ip_port_result,state);
 }
 
 

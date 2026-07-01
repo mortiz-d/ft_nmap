@@ -15,7 +15,7 @@ int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int por
     addr.sin_port = htons(dest_port);
     
 
-    send = sendto(sockfd, mensaje, sizeof(mensaje), 0, (struct sockaddr *)&addr, sizeof(addr));
+    send = sendto(sockfd, mensaje, mensaje_size, 0, (struct sockaddr *)&addr, sizeof(addr));
     if (send < 0) {
         if (DEBUG)
             printf("Error : UDP Sending to port\n");

@@ -1,8 +1,5 @@
 #include "../lib/nmap.h"
 
-// #include "../lib/nmap.h"
-
-
 static void debug_print_result_table(t_list *lst)
 {
     t_result_scan *table;
