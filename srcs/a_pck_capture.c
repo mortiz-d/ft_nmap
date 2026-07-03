@@ -66,6 +66,8 @@ void capture_packets(t_params *params){
     pcap_setnonblock(handle, 1, errbuf);
     
     start = time(NULL);
+    printf("%i,", params->n_ports);
+    
     while ( params->n_packet_sended < params->n_ports)
     {
         if (params->active_scan == UDP_SCAN)

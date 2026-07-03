@@ -90,6 +90,7 @@ void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
     inet_ntop(AF_INET, &ip->saddr, src_ip, sizeof(src_ip));
     inet_ntop(AF_INET, &ip->daddr, dst_ip, sizeof(dst_ip));
 
+    printf("%i,", params->n_packet_sended);
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN))
     {
         if (DEBUG)

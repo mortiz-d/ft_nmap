@@ -1,4 +1,5 @@
 #include "../lib/nmap.h"
+#include <stdio.h>
 
 uint16_t calculate_checksum(void *data, int len) {
     unsigned short *buf = data;
@@ -89,7 +90,7 @@ void *send_scans(void *args){
         //----
         ft_memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-    
+        
         if (inet_pton(AF_INET, task->ip, &addr.sin_addr) <= 0)
         {
             printf("Invalid IP -> %s\n", task->ip);
@@ -190,6 +191,12 @@ void print_result_table(t_list *lst)
     printf("+--------+------------+------------+------------+------------+------------+------------+\n");
 }
 
+void *t_cap_scans(void *args_v){
+    t_params* args = (t_params*)args_v;
+    capture_packets(args);
+    return NULL;
+}
+
 void main_scan_logic(t_params* args){
     t_list *ips = *args->ip_list;
     char *ip = NULL;
@@ -204,7 +211,9 @@ void main_scan_logic(t_params* args){
 
     pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
 
-    capture_packets(args);
+    pthread_t rec_thread;
+    pthread_create(&rec_thread, NULL, t_cap_scans, &args);
+    // capture_packets(args);
     
     int task_count = 0;
     for (t_list *scans = *args->scan; scans; scans = scans->next){
@@ -247,7 +256,7 @@ void main_scan_logic(t_params* args){
         }
         head = NULL;
     }
-
+    // pthread_join(rec_thread, NULL);
     print_result_table(*args->results);
     reset_all_results(args->results, *args->scan);
     // clean_result_table(*args->results);
