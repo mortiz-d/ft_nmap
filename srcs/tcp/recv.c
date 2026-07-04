@@ -26,6 +26,12 @@ t_port_state determine_status_tcp (struct tcphdr *tcp, t_scan scan_type)
             if ( rst )
                 return PORT_UNFILTERED;
             break;
+        case XMAS_SCAN:
+        case FIN_SCAN:
+            if ( rst )
+                return PORT_CLOSED;
+            break;
+        
         default:
             break;
     }

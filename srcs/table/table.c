@@ -136,12 +136,16 @@ void alter_port_status (t_params *params, t_list *port,  t_port_state state)
 void generate_result_table(t_params *params)
 {
     (void)params; 
-    t_list **lst_res = ft_calloc(1,sizeof(t_list*));
+    t_list **lst_res ;//= ft_calloc(1,sizeof(t_list*));
     t_list **lst_ports = NULL;
     t_list *ips, *ports;
     t_result_scan *aux;
     t_result_port *aux_p;
 
+    if (!params->ip_list)
+        return;
+
+    lst_res = ft_calloc(1,sizeof(t_list*));
     ips = *(params->ip_list);
     while(ips)
     {
@@ -192,6 +196,7 @@ void print_result_table(t_params *params)
         scan = a_scan->content;
         p_scan = ((t_list *)*scan->port);
         printf("\n");
+        printf("%s\n",scan->ip);
         printf("+--------+------------+------------+------------+------------+------------+------------+\n");
         printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
         printf("+--------+------------+------------+------------+------------+------------+------------+\n");

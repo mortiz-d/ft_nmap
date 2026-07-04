@@ -18,6 +18,7 @@ int main(int argc, char **argv)
 
     if (!process_flags(argc, argv, flags,params))
     {
+        // printf("?\n");
         return free_all(flags, params);
     }
 
@@ -25,6 +26,7 @@ int main(int argc, char **argv)
     debug_params(params);
     if (params->help == 1)
     {
+        // printf("?!\n");
         return free_all(flags, params);
     }
 
