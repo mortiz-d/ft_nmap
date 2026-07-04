@@ -16,11 +16,11 @@ char *create_filter(t_params *params){
             temp = ft_strjoin(filter, " or src host ");
         filter = ft_strjoin(temp, ip);
         free(temp);
-        
+
         ips = ips->next;
         ++i;
     }
-    
+
     temp = filter;
     if (params->active_scan == UDP_SCAN)
         filter = ft_strjoin(filter, ") and udp");
@@ -59,15 +59,16 @@ void capture_packets(t_params *params){
     params->n_packet_recieved = 0;
 
     filter = create_filter(params);
+    printf("filter created\n");
 
     pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, &fp);
 
     pcap_setnonblock(handle, 1, errbuf);
-    
+
     start = time(NULL);
     printf("%i,", params->n_ports);
-    
+
     while ( params->n_packet_sended < params->n_ports)
     {
         if (params->active_scan == UDP_SCAN)
@@ -91,5 +92,5 @@ void capture_packets(t_params *params){
     pcap_freecode(&fp);
     pcap_close(handle);
     pcap_freealldevs(dev_lst);
-   
+
 }

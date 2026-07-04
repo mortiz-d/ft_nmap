@@ -1,5 +1,6 @@
 #include "../lib/nmap.h"
 #include <stdio.h>
+#include <unistd.h>
 
 uint16_t calculate_checksum(void *data, int len) {
     unsigned short *buf = data;
@@ -36,7 +37,7 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
 
     char packet[4096];
     int sockfd;
-    
+
     if (scan != UDP_SCAN)
         sockfd = socket_connection_tcp(params); //TCP
     else
@@ -59,7 +60,7 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
     {
         send_probe_udp(sockfd,addr,params,port);
     }
-    
+
     close(sockfd);
     ft_bzero(packet, sizeof(packet));
     return;
@@ -76,12 +77,12 @@ static t_scan_task *dequeue(t_scan_task **head){
 void *send_scans(void *args){
     struct s_scan_tasks *task_args = (struct s_scan_tasks *)args;
     struct sockaddr_in addr;
-    
+
     while (1) {
         pthread_mutex_lock(task_args->queue_lock);
         t_scan_task *task = dequeue(&task_args->head);
         pthread_mutex_unlock(task_args->queue_lock);
-        
+
         if (!task) return NULL;
 
         //PRUEBAS----
@@ -90,14 +91,14 @@ void *send_scans(void *args){
         //----
         ft_memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        
+
         if (inet_pton(AF_INET, task->ip, &addr.sin_addr) <= 0)
         {
             printf("Invalid IP -> %s\n", task->ip);
             return NULL;
         }
         scan_port(task_args->params,addr, task->port, (t_scan)task->scan);
-        
+
         free(task->ip);
         free(task);
     }
@@ -133,7 +134,7 @@ void *send_scans(void *args)
     return NULL;
 } */
 
-//Este hilo ira recogiendo todos los 
+//Este hilo ira recogiendo todos los
 /* void *receive_scans(void *args){
     t_params *params = (t_params *)args;
     (void)params; //QUITAR, es para que se calle el unused variable | NOT ANYMORE (mortiz)
@@ -157,14 +158,14 @@ static const char *port_state_str(t_port_state state)
             break;
         case PORT_UNFILTERED:
             return "UNFILTERED";
-            break; 
+            break;
         case PORT_UNCALLED:
             return "----------";
             break;
         case PORT_OPENFILTERED:
             return "OP|FILT";
             break;
-        
+
         default:
             break;
     }
@@ -214,13 +215,13 @@ void main_scan_logic(t_params* args){
     pthread_t rec_thread;
     pthread_create(&rec_thread, NULL, t_cap_scans, &args);
     // capture_packets(args);
-    
+
     int task_count = 0;
     for (t_list *scans = *args->scan; scans; scans = scans->next){
         scan = (t_scan *)scans->content;
         while (ips){
             ip = (char *)ips->content;
-            
+
             for (t_list *ports = *args->ports; ports; ports = ports->next){
                 prt = (t_port *)ports->content;
                 port = prt->port_nbr;
@@ -241,19 +242,25 @@ void main_scan_logic(t_params* args){
             ips = ips->next;
         }
         args->active_scan = *scan;
-        
+
         if(DEBUG)
             printf("Executing %i tasks in %i threads\n", task_count, args->threads);
-    
+
         struct s_scan_tasks task_args = {&queue_lock, args, head};
         pthread_t *sender_threads = malloc(sizeof(pthread_t) * args->threads);
+        if (!sender_threads){
+            printf("malloc error when creating threads, aborting...\n");
+            return;
+        }
+
         for (int i = 0; i < args->threads; ++i){
             pthread_create(&sender_threads[i], NULL, send_scans, &task_args);
         }
-        
+
         for (int i = 0; i < args->threads; ++i){
             pthread_join(sender_threads[i], NULL);
         }
+        free(sender_threads);
         head = NULL;
     }
     // pthread_join(rec_thread, NULL);
@@ -274,7 +281,7 @@ void main_scan_logic(t_params* args){
     {
         ((t_params *)args)->active_scan = *(t_scan *)scans->content;
         printf("Swiched to another scan %i \n", *(t_scan *)scans->content);
-        
+
 
         pthread_create(&receiver_thread, NULL, receive_scans, args);
         sleep(2);
@@ -282,7 +289,7 @@ void main_scan_logic(t_params* args){
 
         pthread_join(sender_thread, NULL);
         pthread_join(receiver_thread, NULL);
-        
+
         scans = scans->next;
     }
     print_result_table(*args->results);
