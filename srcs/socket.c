@@ -1,4 +1,5 @@
 #include "../lib/nmap.h"
+#include <stdio.h>
 
 
 int socket_connection_tcp(struct sockaddr_in addr)
@@ -24,7 +25,7 @@ int socket_connection_tcp(struct sockaddr_in addr)
     //     close(sockfd);
     //     return -1;
     // }
-    
+
     if ( setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &activate, sizeof(activate)) < 0)
     {
         close(sockfd);
@@ -43,6 +44,10 @@ int socket_connection_udp(struct sockaddr_in addr)
 
 
     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); //UDP
+    if (sockfd < 0){
+        perror("error creating socket:");
+        return -1;
+    }
 
     memset(&local, 0, sizeof(local));
 
@@ -51,10 +56,11 @@ int socket_connection_udp(struct sockaddr_in addr)
     local.sin_port = htons(UDP_DEFAULT_BASE_PORT); // puerto origen
 
 
-    if (bind(sockfd, (struct sockaddr *)&local, sizeof(local)) < 0)
-    {
-        return -1;
-    }
+    // if (bind(sockfd, (struct sockaddr *)&local, sizeof(local)) < 0)
+    // {
+    //     perror("error binding socket");
+    //     return -1;
+    // }
 
     inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip));
     inet_pton(AF_INET, ip, &local.sin_addr);

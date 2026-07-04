@@ -17,11 +17,11 @@ char *create_filter(t_params *params){
             temp = ft_strjoin(filter, " or host ");
         filter = ft_strjoin(temp, ip);
         free(temp);
-        
+
         ips = ips->next;
         ++i;
     }
-    
+
     if (params->active_scan != UDP_SCAN)
         port_str = ft_itoa(SOURCE_PORT);
 
@@ -70,8 +70,6 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
     params->n_packet_recieved = 0;
 
     filter = create_filter(params);
-    if (DEBUG)
-        printf("FILTER -> %s\n",filter);
     pcap_compile(handle, fp, filter, 0, PCAP_NETMASK_UNKNOWN);
     pcap_setfilter(handle, fp);
     pcap_setnonblock(handle, 1, errbuf);

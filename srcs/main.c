@@ -1,4 +1,5 @@
 #include "../lib/nmap.h"
+#include <unistd.h>
 
 int free_all(t_list *flags, t_params *params)
 {
@@ -8,10 +9,15 @@ int free_all(t_list *flags, t_params *params)
     return 1;
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
     t_list *flags = NULL;
     t_params *params = NULL;
+
+    if (getuid()){
+        printf("This program must be run as sudo.\n");
+        return 0;
+    }
 
     params =  params_default_config();
     flags = flags_config();
