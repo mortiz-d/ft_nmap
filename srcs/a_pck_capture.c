@@ -1,51 +1,75 @@
 #include "../lib/nmap.h"
 #include <stdio.h>
 
-char *create_filter(t_params *params){
+char * get_port_filter(t_params *params)
+{
+    char *filter = NULL;
+    char *temp = NULL;
+    t_list *scans = *params->scan;
+    t_scan *scan = NULL;
+    char *port;
+
+    int i = 0;
+    while (scans){
+        scan = (t_scan *)scans->content;
+        if (i == 0)
+            temp = ft_strdup("(dst port ");
+        else
+            temp = ft_strjoin(filter, " or dst port ");
+        port = ft_itoa(scan_2_port(*scan));
+        filter = ft_strjoin(temp,port );
+        free(port);
+        free(temp);
+        
+        scans = scans->next;
+        ++i;
+    }
+    temp = ft_strjoin(filter, ") ");
+    free(filter);
+
+    return temp;
+}
+
+char * get_ip_filter(t_params *params)
+{
     char *filter = NULL;
     char *temp = NULL;
     t_list *ips = *params->ip_list;
     char *ip = NULL;
-    char *port_str = NULL;
 
     int i = 0;
     while (ips){
         ip = (char *)ips->content;
         if (i == 0)
-            temp = ft_strdup("(host ");
+            temp = ft_strdup("(src host ");
         else
-            temp = ft_strjoin(filter, " or host ");
+            temp = ft_strjoin(filter, " or src host ");
         filter = ft_strjoin(temp, ip);
         free(temp);
         
         ips = ips->next;
         ++i;
     }
-    
-    if (params->active_scan != UDP_SCAN)
-        port_str = ft_itoa(SOURCE_PORT);
+    temp = ft_strjoin(filter, ") ");
+    free(filter);
+
+    return temp;
+
+}
 
 
+char *create_filter(t_params *params)
+{
+    char *ips = NULL;
+    char *ports = NULL;
+    char *result;
 
-    temp = filter;
-    if (params->active_scan == UDP_SCAN)
-        filter = ft_strjoin(filter, ") and (udp or icmp)");
-    else
-        filter = ft_strjoin(filter, ") and tcp and dst port ");
-    free(temp);
+    ips = get_ip_filter(params);
+    ports = get_port_filter(params);
 
-    if (params->active_scan != UDP_SCAN)
-    {
-        temp = filter;
-        filter = ft_strjoin(filter, port_str);
-        free(temp);
-        free(port_str);
-    }
+    ft_asprintf(&result,"%s and %s and tcp", ips,ports);
 
-    if (DEBUG)
-        printf("filter is %s\n", filter);
-    // free(temp);
-    return filter;
+    return result;
 }
 
 pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_lst){

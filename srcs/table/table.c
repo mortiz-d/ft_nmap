@@ -106,10 +106,10 @@ t_result_port * generate_default_port (t_params *params, t_port *port)
     return r_scan;
 }
 
-void alter_port_status (t_params *params, t_list *port,  t_port_state state)
+void alter_port_status (t_list *port,  t_port_state state, t_scan scan)
 {
     t_result_port *aux = port->content;
-    switch (params->active_scan)
+    switch (scan)
     {
         case SYN_SCAN:
             aux->syn = state;
@@ -169,7 +169,7 @@ void generate_result_table(t_params *params)
     params->results = lst_res;
 }
 
-void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state)
+void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state, t_scan scan)
 {
     t_list *ip_result = NULL;
     t_list *ip_port_result = NULL;
@@ -178,7 +178,7 @@ void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_stat
     if (ip_result)
         ip_port_result = ft_lstfind_match( *((t_result_scan *)ip_result->content)->port , cmp_port, &port);
     if (ip_port_result)
-        alter_port_status(params,ip_port_result,state);
+        alter_port_status(ip_port_result,state, scan);
 }
 
 

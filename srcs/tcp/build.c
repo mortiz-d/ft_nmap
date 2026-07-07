@@ -54,11 +54,13 @@ void build_ip_header(t_params *params,struct iphdr *ip, struct sockaddr_in dst)
     ip->daddr = dst.sin_addr.s_addr;            //Destiny IP
 }
 
+
+
 void build_tcp_header(struct tcphdr *tcp, int port, t_scan type)
 {
     ft_memset(tcp, 0, sizeof(struct tcphdr));
 
-    tcp->source = htons(SOURCE_PORT);   //From what port originates
+    tcp->source = htons(scan_2_port(type));   //From what port originates
     tcp->dest = htons(port);                    //Destiny port
     tcp->seq = htonl(1);                   //Nº sequence
     tcp->ack_seq = 0;                           
@@ -67,9 +69,7 @@ void build_tcp_header(struct tcphdr *tcp, int port, t_scan type)
     if (type == SYN_SCAN) 
         tcp->syn = 1;       //This activates the SYN flag
     else if (type == FIN_SCAN)
-    {
         tcp->fin = 1;       //This activates the FIN flag
-    }
     else if (type == XMAS_SCAN)
     {
         tcp->psh = 1;
@@ -77,10 +77,7 @@ void build_tcp_header(struct tcphdr *tcp, int port, t_scan type)
         tcp->urg = 1;
     }
     else if (type == ACK_SCAN)
-    {
         tcp->ack = 1;
-    }
-
     tcp->window = htons(5840); //Buffer in bytes BEFORE recieving ACK, see https://en.wikipedia.org/wiki/TCP_window_scale_option
     tcp->check = 0;  // Checksum (Will be put later)
 }
@@ -94,6 +91,15 @@ void build_packet_tcp(char *packet, t_params *params, struct sockaddr_in addr, i
 
     build_ip_header(params, ip, addr);
     build_tcp_header(tcp, port, type);
+
+    // char *payload = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
+    // strcpy(payload, "Hola mundo");
+
+    // ip->tot_len = htons(sizeof(struct iphdr) +
+    //                     sizeof(struct tcphdr) +
+    //                     strlen(payload));
+
+
     compute_tcp_checksum(ip, tcp); //(Tanto rollo para hacer el checksum :v )
     // debug_ip_header(ip);
     // debug_tcp_header(tcp);

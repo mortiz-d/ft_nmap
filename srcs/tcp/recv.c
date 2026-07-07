@@ -17,10 +17,10 @@ t_port_state determine_status_tcp (struct tcphdr *tcp, t_scan scan_type)
                 return PORT_OPEN;
             break;
         case NUL_SCAN:
-            if ( rst )
-                return PORT_OPEN;
-                     if ( ack && rst )
+            if ( ack && rst )
                 return PORT_CLOSED;
+            else if ( rst )
+                return PORT_OPEN;
             break;
         case ACK_SCAN:
             if ( rst )
@@ -31,7 +31,6 @@ t_port_state determine_status_tcp (struct tcphdr *tcp, t_scan scan_type)
             if ( rst )
                 return PORT_CLOSED;
             break;
-        
         default:
             break;
     }
@@ -51,8 +50,6 @@ void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
 
     uint16_t port = ntohs(tcp->th_sport);
 
-
-
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN))
     {
         if (DEBUG)
@@ -66,7 +63,8 @@ void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
                 hdr->len
             );
         t_port_state state = determine_status_tcp (tcp,params->active_scan);
-        modify_result_table (params, src_ip, port, state);
+        t_scan scan = port_2_scan(ntohs(tcp->th_dport));
+        modify_result_table (params, src_ip, port, state, scan);
        
         params->n_packet_recieved++;
 

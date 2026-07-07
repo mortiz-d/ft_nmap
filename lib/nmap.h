@@ -11,7 +11,13 @@
 #define MIN_PORT_RANGE 0
 #define MAX_PORT_RANGE 65535
 #define UDP_DEFAULT_BASE_PORT 33434
-#define SOURCE_PORT 52341
+#define SOURCE_PORT 52340
+#define SYN_PORT 52341
+#define NUL_PORT 52342
+#define XMAS_PORT 52343
+#define FIN_PORT 52344
+#define ACK_PORT 52345
+#define UDP_PORT 52346
 #define TIMEOUT_MS 3000
 #define UDP_PROBE_DELAY_US 100000
 #define UDP_MAX_RETRIES 10
@@ -164,7 +170,11 @@ int socket_connection_udp(struct sockaddr_in addr);
 int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int port);
 void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
 
-void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state);
+void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state, t_scan scan);
+
+//AUX
+int scan_2_port(t_scan scan);
+int port_2_scan(int port);
 
 //SCAN
 void main_scan_logic(t_params* args);

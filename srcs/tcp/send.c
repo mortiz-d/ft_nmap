@@ -3,6 +3,7 @@
 int send_packet_tcp(int sockfd, char *packet, struct sockaddr_in addr)
 {
     ssize_t sent;
+    // ssize_t packet_size = ntohs(addr->tot_len);
     ssize_t payload_size = (sizeof(struct iphdr) + sizeof(struct tcphdr));
 
     sent = sendto(sockfd,packet, payload_size ,0,(struct sockaddr *)&addr,sizeof(addr));
