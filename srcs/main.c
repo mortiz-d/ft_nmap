@@ -1,6 +1,20 @@
 #include "../lib/nmap.h"
 #include <unistd.h>
 
+void print_datetime_now(void) {
+    struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
+        struct tm *local = localtime(&ts.tv_sec);
+
+        char buffer[64];
+        strftime(buffer, sizeof(buffer), "%H:%M:%S", local);
+
+        long milliseconds = ts.tv_nsec / 1000000;
+
+        printf("%s.%03ld\n", buffer, milliseconds);
+}
+
 int free_all(t_list *flags, t_params *params)
 {
     // ft_lstiter(flags,print_flag);

@@ -1,4 +1,5 @@
 #include "../../lib/nmap.h"
+#include <netinet/ip_icmp.h>
 
 void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt)
 {
@@ -16,6 +17,8 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
 
     udp = (struct udphdr *)(pkt + 14 + ip->ihl * 4);
 
+    printf("WE RECEIVED SOMETHING\n");
+
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN) && ip->protocol == IPPROTO_UDP) //UDP
     {
         //if header is UDP its open
@@ -28,15 +31,21 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
     {
         //if header is ICMP its closed
         icmp = (struct icmphdr *)(pkt + 14 + ip->ihl * 4);
+        orig_ip = (struct iphdr *)((u_char *)icmp + sizeof(struct icmphdr));
+        orig_udp = (struct udphdr *)((u_char *)orig_ip + orig_ip->ihl * 4);
 
-        if (icmp->type == 3 && icmp->code == 3)
+        if (icmp->type == ICMP_DEST_UNREACH && icmp->code == ICMP_PORT_UNREACH) //si es tipo 3, codigo 3
         {
-            orig_ip = (struct iphdr *)((u_char *)icmp + sizeof(struct icmphdr));
-            orig_udp = (struct udphdr *)((u_char *)orig_ip + orig_ip->ihl * 4);
-
             if (DEBUG)
                 printf("RECV ICMP [%s] -> [%s] | type=%d code=%d | UDP port CLOSED: %d | len: %d bytes\n", src_ip, dst_ip, icmp->type, icmp->code, ntohs(orig_udp->uh_dport),hdr->len);
             modify_result_table (params, src_ip, ntohs(orig_udp->uh_dport), PORT_CLOSED);
+            params->n_packet_recieved++;
+        }
+        else if (icmp->type == ICMP_DEST_UNREACH && icmp->code != ICMP_PORT_UNREACH) //si es tipo 3, codigo != 3
+        {
+            if (DEBUG)
+                printf("RECV ICMP [%s] -> [%s] | type=%d code=%d | UDP port FILTERED: %d | len: %d bytes\n", src_ip, dst_ip, icmp->type, icmp->code, ntohs(orig_udp->uh_dport),hdr->len);
+            modify_result_table (params, src_ip, ntohs(orig_udp->uh_dport), PORT_FILTERED);
             params->n_packet_recieved++;
         }
     }
