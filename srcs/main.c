@@ -27,6 +27,7 @@ int main(int argc, char **argv)
 {
     t_list *flags = NULL;
     t_params *params = NULL;
+    struct timespec begin, end;
 
     if (getuid()){
         printf("This program must be run as sudo.\n");
@@ -56,7 +57,14 @@ int main(int argc, char **argv)
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
+
+    clock_gettime(CLOCK_MONOTONIC, &begin);
     main_scan_logic(params);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+
+
+    double elapsed = (end.tv_sec - begin.tv_sec) + (end.tv_nsec - begin.tv_nsec) / 1e9;
+    printf("Performed scans in %.2f seconds\n", elapsed);
 
     print_result_table(params);
     return free_all(flags, params);

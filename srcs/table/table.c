@@ -210,7 +210,7 @@ void print_result_table(t_params *params)
             port = p_scan->content;
             service = getservbyport(htons(port->port_nbr), NULL);
             if (!service)
-                srvname = ft_strdup("unknown");
+                srvname = ft_strdup("Unassigned");
             else
                 srvname = ft_strdup(service->s_name);
             printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",port->port_nbr,srvname,port_state_str(port->syn),port_state_str(port->nul),port_state_str(port->fin),port_state_str(port->xmas),port_state_str(port->ack),port_state_str(port->udp));
