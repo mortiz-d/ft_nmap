@@ -17,8 +17,6 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
 
     udp = (struct udphdr *)(pkt + 14 + ip->ihl * 4);
 
-    printf("WE RECEIVED SOMETHING\n");
-
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN) && ip->protocol == IPPROTO_UDP) //UDP
     {
         //if header is UDP its open
@@ -33,6 +31,7 @@ void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_cha
         icmp = (struct icmphdr *)(pkt + 14 + ip->ihl * 4);
         orig_ip = (struct iphdr *)((u_char *)icmp + sizeof(struct icmphdr));
         orig_udp = (struct udphdr *)((u_char *)orig_ip + orig_ip->ihl * 4);
+        inet_ntop(AF_INET, &orig_ip->daddr, src_ip, sizeof(src_ip));
 
         if (icmp->type == ICMP_DEST_UNREACH && icmp->code == ICMP_PORT_UNREACH) //si es tipo 3, codigo 3
         {
