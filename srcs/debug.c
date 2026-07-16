@@ -108,6 +108,12 @@ void debug_params(t_params *params)
     else
         printf("No scans\n");
 
+    
+    if (params->udp_active)
+    {
+        printf("\n--- SCANS ---\nUDP SCAN ACTIVATED TOO\n");
+    }
+
     printf("\n--- RESULT TABLE ---\n");
     if (params->results)
         debug_print_result_table(*params->results);

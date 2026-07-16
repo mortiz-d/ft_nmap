@@ -99,6 +99,7 @@ typedef struct s_params
     char	*active_ip;   //IP currently scanning
     int     n_packet_sended;
     int     n_packet_recieved;
+    int     udp_active;
     int     udp_delay_us;   //Delay between udp probes
 
 

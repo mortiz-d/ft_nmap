@@ -1,5 +1,13 @@
 #include "../lib/nmap.h"
 
+static char *scan_to_string2(t_scan scan)
+{
+    static char *names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP","UNKNOWN"};
+    if (scan >= SYN_SCAN && scan <= UDP_SCAN)
+        return names[scan];
+    return names[6];
+}
+
 void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan){
 
     char packet[4096];
@@ -18,13 +26,15 @@ void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
     }
 
     ft_bzero(packet, sizeof(packet));
-    if (params->active_scan != UDP_SCAN)
+    if (scan != UDP_SCAN)
     {
+        printf("Mensaje Mandado TCP - %s\n",scan_to_string2(scan));
         build_packet_tcp(packet,params,addr,port,scan);
         send_packet_tcp(sockfd, packet, addr);
     }
     else
     {
+        printf("Mensaje Mandado UDP - %s\n",scan_to_string2(scan));
         send_probe_udp(sockfd,addr,params,port);
     }
 
@@ -197,6 +207,8 @@ static void run_scan_pass(t_params *args, t_scan_task *head, int expected)
 //     }
 // }
 
+
+
 void main_scan_logic(t_params* args){
     t_list      *ips = *args->ip_list;
     // t_list      *ports;
@@ -211,12 +223,13 @@ void main_scan_logic(t_params* args){
         free(local_dst);
     }
 
-    for (t_list *ips = *args->ip_list; ips; ips = ips->next)
+    for (t_list *scans = *args->scan; scans; scans = scans->next)
     {
         for (t_list *ports = *args->ports; ports; ports = ports->next)
         {
-            for (t_list *scans = *args->scan; scans; scans = scans->next)
+            for (t_list *ips = *args->ip_list; ips; ips = ips->next)
             {
+                // printf("Message loaded as %s\n",scan_to_string2(*(t_scan *)scans->content));
                 t_scan *scan = scans->content;
 
                 ptr = malloc(sizeof(t_scan_task));
@@ -241,34 +254,8 @@ void main_scan_logic(t_params* args){
         ft_printf("Executing %i tasks in %i threads\n", task_count, args->threads);
     run_scan_pass(args, head, task_count);
 
-    // for (t_list *scans = *args->scan; scans; scans = scans->next){
-    //     scan = (t_scan *)scans->content;
-    //     args->active_scan = *scan;
+    // if (args->udp_active)
+    //     udp_retransmit(args, UDP_SCAN, task_count);
 
-    //     head = NULL;
-    //     tail = NULL;
-    //     task_count = 0;
-    //     ips = *args->ip_list;
-    //     while (ips){
-    //         for (ports = *args->ports; ports; ports = ports->next){
-    //             ptr = malloc(sizeof(t_scan_task));
-    //             ptr->t_id = ++task_count;
-    //             ptr->port = ((t_port *)ports->content)->port_nbr;
-    //             ptr->ip = ft_strdup((char *)ips->content);
-    //             ptr->scan = *scan;
-    //             ptr->next = NULL;
-    //             if (tail)
-    //                 tail->next = ptr;
-    //             else
-    //                 head = ptr;
-    //             tail = ptr;
-    //         }
-    //         ips = ips->next;
-    //     }
-
-    //     
-
-    //     if (*scan == UDP_SCAN)
-    //         udp_retransmit(args, *scan, task_count);
-    // }
+    
 }
