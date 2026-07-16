@@ -157,22 +157,67 @@ char * get_port_filter(t_params *params)
     int i = 0;
     while (scans){
         scan = (t_scan *)scans->content;
+        if (*scan != UDP_SCAN)
+        {
+            if (i == 0)
+                temp = ft_strdup("(dst port ");
+            else
+                temp = ft_strjoin(filter, " or dst port ");
+            port = ft_itoa(scan_2_port(*scan));
+            filter = ft_strjoin(temp,port );
+            free(port);
+            free(temp);
+            ++i;
+        }
+        scans = scans->next;
+    }
+    temp = ft_strjoin(filter, ") ");
+    free(filter);
+
+    return temp;
+}
+
+char * get_udp_port_filter(t_params *params)
+{
+    char *filter = NULL;
+    char *temp = NULL;
+    t_list *ports = *params->ports;
+    t_port *port_entry;
+    char *port;
+
+    int i = 0;
+    while (ports){
+        port_entry = (t_port *)ports->content;
         if (i == 0)
-            temp = ft_strdup("(dst port ");
+            temp = ft_strdup("(src port ");
         else
-            temp = ft_strjoin(filter, " or dst port ");
-        port = ft_itoa(scan_2_port(*scan));
-        filter = ft_strjoin(temp,port );
+            temp = ft_strjoin(filter, " or src port ");
+        port = ft_itoa(port_entry->port_nbr);
+        filter = ft_strjoin(temp, port);
         free(port);
         free(temp);
-        
-        scans = scans->next;
+
+        ports = ports->next;
         ++i;
     }
     temp = ft_strjoin(filter, ") ");
     free(filter);
 
     return temp;
+}
+
+bool scan_list_has(t_params *params, t_scan target)
+{
+    t_list *scans = *params->scan;
+    t_scan *scan;
+
+    while (scans){
+        scan = (t_scan *)scans->content;
+        if (*scan == target)
+            return true;
+        scans = scans->next;
+    }
+    return false;
 }
 
 char * get_ip_filter(t_params *params)
@@ -206,16 +251,43 @@ char * get_ip_filter(t_params *params)
 char *create_filter(t_params *params)
 {
     char *ips = NULL;
-    char *ports = NULL;
+    char *tcp_ports = NULL;
+    char *udp_ports = NULL;
     char *result;
+    bool has_udp = scan_list_has(params, UDP_SCAN);
+    bool has_tcp = scan_list_has(params, SYN_SCAN) || scan_list_has(params, NUL_SCAN)
+        || scan_list_has(params, FIN_SCAN) || scan_list_has(params, XMAS_SCAN)
+        || scan_list_has(params, ACK_SCAN);
 
     ips = get_ip_filter(params);
-    ports = get_port_filter(params);
 
-    ft_asprintf(&result,"%s and %s and tcp", ips,ports);
+    // ft_asprintf(&result,"%s and %s and tcp", ips,ports);
     
-    return "(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)";
-    return "(src host 192.168.1.1)  and (dst port 52341 or dst port 52346)  and tcp";
+    // return "(icmp and dst host 192.168.1.136) or (udp and src host 192.168.1.136 and src port 33434)";
+    // return "(src host 192.168.1.1)  and (dst port 52341 or dst port 52346)  and tcp";
+    if (has_tcp && has_udp)
+    {
+        tcp_ports = get_port_filter(params);
+        udp_ports = get_udp_port_filter(params);
+        ft_asprintf(&result, "((%s and %s and tcp) or (icmp and dst host %s) or (%s and %s and udp))",
+            ips, tcp_ports, params->internal_ip, ips, udp_ports);
+    }
+    else if (has_udp)
+    {
+        udp_ports = get_udp_port_filter(params);
+        ft_asprintf(&result, "((icmp and dst host %s) or (%s and %s and udp))",
+            params->internal_ip, ips, udp_ports);
+    }
+    else
+    {
+        tcp_ports = get_port_filter(params);
+        ft_asprintf(&result, "(%s and %s and tcp)", ips, tcp_ports);
+    }
+
+    free(ips);
+    free(tcp_ports);
+    free(udp_ports);
+
     return result;
 }
 

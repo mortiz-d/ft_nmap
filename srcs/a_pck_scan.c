@@ -101,44 +101,44 @@ static void free_task_queue(t_scan_task *head)
 }
 
 // Makes a queue with all open|filtered udp ports
-// static int build_udp_retry_queue(t_params *args, t_scan_task **head, t_scan_task **tail, int scan)
-// {
-//     t_list          *res = *args->results;
-//     t_result_scan   *rs;
-//     t_list          *p;
-//     t_result_port   *rp;
-//     t_scan_task     *t;
-//     int             count = 0;
+static int build_udp_retry_queue(t_params *args, t_scan_task **head, t_scan_task **tail, int scan)
+{
+    t_list          *res = *args->results;
+    t_result_scan   *rs;
+    t_list          *p;
+    t_result_port   *rp;
+    t_scan_task     *t;
+    int             count = 0;
 
-//     *head = NULL;
-//     *tail = NULL;
-//     while (res)
-//     {
-//         rs = res->content;
-//         p = *rs->port;
-//         while (p)
-//         {
-//             rp = p->content;
-//             if (rp->udp == PORT_OPENFILTERED)
-//             {
-//                 t = malloc(sizeof(t_scan_task));
-//                 t->t_id = ++count;
-//                 t->port = rp->port_nbr;
-//                 t->ip = ft_strdup(rs->ip);
-//                 t->scan = scan;
-//                 t->next = NULL;
-//                 if (*tail)
-//                     (*tail)->next = t;
-//                 else
-//                     *head = t;
-//                 *tail = t;
-//             }
-//             p = p->next;
-//         }
-//         res = res->next;
-//     }
-//     return count;
-// }
+    *head = NULL;
+    *tail = NULL;
+    while (res)
+    {
+        rs = res->content;
+        p = *rs->port;
+        while (p)
+        {
+            rp = p->content;
+            if (rp->udp == PORT_OPENFILTERED)
+            {
+                t = malloc(sizeof(t_scan_task));
+                t->t_id = ++count;
+                t->port = rp->port_nbr;
+                t->ip = ft_strdup(rs->ip);
+                t->scan = scan;
+                t->next = NULL;
+                if (*tail)
+                    (*tail)->next = t;
+                else
+                    *head = t;
+                *tail = t;
+            }
+            p = p->next;
+        }
+        res = res->next;
+    }
+    return count;
+}
 
 // Does a run sending all requests and capturing/processing
 static void run_scan_pass(t_params *args, t_scan_task *head, int expected)
@@ -168,44 +168,44 @@ static void run_scan_pass(t_params *args, t_scan_task *head, int expected)
     free(sender_threads);
 }
 
-// static void udp_retransmit(t_params *args, int scan, int total_ports)
-// {
-//     int prev_remaining = total_ports + 1;
-//     t_scan_task *rhead, *rtail;
-//     int remaining, sent , dropped , new_delay;
-    
-//     for (int retry = 0; retry < UDP_MAX_RETRIES; ++retry){
-//         sent = args->n_packet_sended;
-//         dropped = sent - args->n_packet_recieved;
+static void udp_retransmit(t_params *args, int scan, int total_ports)
+{
+    int prev_remaining = total_ports + 1;
+    t_scan_task *rhead, *rtail;
+    int remaining, sent , dropped , new_delay;
 
-//         if (sent > 0 && (dropped * 100 / sent) > UDP_DROP_THRESHOLD_PCT && args->udp_delay_us < UDP_MAX_DELAY_US)
-//         {
-//             new_delay = args->udp_delay_us * 2;
-//             if (new_delay > UDP_MAX_DELAY_US)
-//                 new_delay = UDP_MAX_DELAY_US;
-//             if (DEBUG)
-//                 printf("Increasing send delay: %i -> %i us (%i/%i probes dropped)\n", args->udp_delay_us, new_delay, dropped, sent);
-//             args->udp_delay_us = new_delay;
-//         }
+    for (int retry = 0; retry < UDP_MAX_RETRIES; ++retry){
+        sent = args->n_packet_sended;
+        dropped = sent - args->n_packet_recieved;
 
-//         remaining = build_udp_retry_queue(args, &rhead, &rtail, scan);
-//         if (remaining == 0)
-//             break;
-        
-//         // when there is no new updates that means we have run out of closed ports
-//         if (remaining >= prev_remaining && args->udp_delay_us >= UDP_MAX_DELAY_US){
-//             free_task_queue(rhead);
-//             break;
-//         }
-//         prev_remaining = remaining;
+        if (sent > 0 && (dropped * 100 / sent) > UDP_DROP_THRESHOLD_PCT && args->udp_delay_us < UDP_MAX_DELAY_US)
+        {
+            new_delay = args->udp_delay_us * 2;
+            if (new_delay > UDP_MAX_DELAY_US)
+                new_delay = UDP_MAX_DELAY_US;
+            if (DEBUG)
+                printf("Increasing send delay: %i -> %i us (%i/%i probes dropped)\n", args->udp_delay_us, new_delay, dropped, sent);
+            args->udp_delay_us = new_delay;
+        }
 
-//         if (DEBUG)
-//             printf("UDP retry %i/%i: %i puertos pendientes (delay %i us)\n",
-//                    retry + 1, UDP_MAX_RETRIES, remaining, args->udp_delay_us);
-//         usleep(UDP_RETRY_WAIT_US);
-//         run_scan_pass(args, rhead, remaining);
-//     }
-// }
+        remaining = build_udp_retry_queue(args, &rhead, &rtail, scan);
+        if (remaining == 0)
+            break;
+
+        // when there is no new updates that means we have run out of closed ports
+        if (remaining >= prev_remaining && args->udp_delay_us >= UDP_MAX_DELAY_US){
+            free_task_queue(rhead);
+            break;
+        }
+        prev_remaining = remaining;
+
+        if (DEBUG)
+            printf("UDP retry %i/%i: %i puertos pendientes (delay %i us)\n",
+                   retry + 1, UDP_MAX_RETRIES, remaining, args->udp_delay_us);
+        usleep(UDP_RETRY_WAIT_US);
+        run_scan_pass(args, rhead, remaining);
+    }
+}
 
 
 
@@ -213,9 +213,9 @@ void main_scan_logic(t_params* args){
     t_list      *ips = *args->ip_list;
     // t_list      *ports;
     // t_scan      *scan;
-    t_scan_task *head, *tail, *ptr;
+    t_scan_task *head = NULL, *tail = NULL, *ptr;
     char        *local_dst;
-    int         task_count;
+    int         task_count = 0;
 
     local_dst = dns_lookup((char *)ips->content);
     if (local_dst){
@@ -254,8 +254,6 @@ void main_scan_logic(t_params* args){
         ft_printf("Executing %i tasks in %i threads\n", task_count, args->threads);
     run_scan_pass(args, head, task_count);
 
-    // if (args->udp_active)
-    //     udp_retransmit(args, UDP_SCAN, task_count);
-
-    
+    if (args->udp_active)
+        udp_retransmit(args, UDP_SCAN, task_count);
 }
