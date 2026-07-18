@@ -153,6 +153,8 @@ static int extract_scan(t_params *params,char *str)
             error = 1;
             break;
         }
+        if (aux == UDP_SCAN)
+            params->udp_active = 1;
         *new_aux = aux;
         ft_lstadd_back(lst_scans, ft_lstnew(new_aux));
     }
@@ -335,6 +337,7 @@ int apply_scan(t_flag *flag, t_params *params)
 {
     if (params->scan)
     {
+        params->udp_active = 0;
         ft_lstiter(*params->scan,free);
         ft_lstclear(params->scan);
         free (params->scan);
@@ -344,7 +347,6 @@ int apply_scan(t_flag *flag, t_params *params)
         return 0;
     return 1;
 }
-
 
 t_list *flags_config (void)
 {

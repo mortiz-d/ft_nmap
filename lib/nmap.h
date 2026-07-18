@@ -11,7 +11,13 @@
 #define MIN_PORT_RANGE 0
 #define MAX_PORT_RANGE 65535
 #define UDP_DEFAULT_BASE_PORT 33434
-#define SOURCE_PORT 52341
+#define SOURCE_PORT 52340
+#define SYN_PORT 52341
+#define NUL_PORT 52342
+#define XMAS_PORT 52343
+#define FIN_PORT 52344
+#define ACK_PORT 52345
+#define UDP_PORT 52346
 #define TIMEOUT_MS 3000
 #define UDP_PROBE_DELAY_US 100000
 #define UDP_MAX_RETRIES 10
@@ -32,16 +38,14 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
+#include <netinet/in.h>
 #include <sys/time.h>
+#include <sys/socket.h>
 #include <netdb.h>
 #include <pcap.h>
 #include <netinet/tcp.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
 #include <pthread.h>
-#include <netinet/udp.h>
 
 
 typedef struct s_tcp_checksum {
@@ -93,20 +97,17 @@ typedef struct s_params
     char	*active_ip;   //IP currently scanning
     int     n_packet_sended;
     int     n_packet_recieved;
+    int     udp_active;
     int     udp_delay_us;   //Delay between udp probes
 
 
 }	t_params;
 
+// states[] is indexed by t_scan (SYN_SCAN..UDP_SCAN)
 typedef struct s_result_port
 {
     int    port_nbr;
-    t_port_state syn;
-    t_port_state nul;
-    t_port_state fin;
-    t_port_state xmas;
-    t_port_state ack;
-    t_port_state udp;
+    t_port_state states[UDP_SCAN + 1];
 }	t_result_port;
 
 typedef struct s_result_scan
@@ -153,18 +154,24 @@ void generate_result_table(t_params *params);
 void print_result_table(t_params *params);
 
 
+//FILTER
+char *create_filter(t_params *params);
+void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
+
 //TCP (BUILD -> SEND -> RECIEVE -> PROCESS)
 int socket_connection_tcp(struct sockaddr_in addr);
 void build_packet_tcp(char *packet, t_params *params, struct sockaddr_in addr, int port, t_scan type);
 int send_packet_tcp(int sockfd, char *packet, struct sockaddr_in addr);
-void packet_handler_tcp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
 
 //UDP ( SEND -> RECIEVE -> PROCESS)
 int socket_connection_udp(struct sockaddr_in addr);
 int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int port);
-void packet_handler_udp(u_char *args, const struct pcap_pkthdr *hdr, const u_char *pkt);
 
-void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state);
+void modify_result_table (t_params *params, char *ip, uint16_t port, t_port_state state, t_scan scan);
+
+//AUX
+int scan_2_port(t_scan scan);
+int port_2_scan(int port);
 
 //SCAN
 void main_scan_logic(t_params* args);

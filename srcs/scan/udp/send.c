@@ -1,4 +1,4 @@
-#include "../../lib/nmap.h"
+#include "../../../lib/nmap.h"
 
 int send_probe_udp(int sockfd ,struct sockaddr_in addr,t_params *params, int port)
 {
