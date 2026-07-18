@@ -52,7 +52,7 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
 
     inet_ntop(AF_INET, &ip->saddr, src_ip, sizeof(src_ip));
     inet_ntop(AF_INET, &ip->daddr, dst_ip, sizeof(dst_ip));
-    
+
     tcp = (struct tcphdr *)(pkt + 14 + ip->ihl * 4);
 
     if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN)) //ICMP
@@ -74,7 +74,7 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
                     t_port_state state = determine_status_tcp (tcp,ntohs(tcp->th_dport));
                     t_scan scan = port_2_scan(ntohs(tcp->th_dport));
                     modify_result_table (params, src_ip, port, state, scan);
-                
+
                     params->n_packet_recieved++;
 
                 break;
@@ -89,23 +89,29 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
                 //if header is UDP its open
                 modify_result_table (params, src_ip,port, PORT_OPEN, UDP_SCAN);
                 params->n_packet_recieved++;
-                
+
 
                 break;
             case IPPROTO_ICMP:
                     icmp = (struct icmphdr *)(pkt + 14 + ip->ihl * 4);
+                    orig_ip = (struct iphdr *)((u_char *)icmp + sizeof(struct icmphdr));
+                    orig_udp = (struct udphdr *)((u_char *)orig_ip + orig_ip->ihl * 4);
+                    port =  ntohs(orig_udp->uh_dport);
 
-                    if (icmp->type == 3 && icmp->code == 3)
+                    if (icmp->type == ICMP_DEST_UNREACH && icmp->code == ICMP_PORT_UNREACH)
                     {
-                        orig_ip = (struct iphdr *)((u_char *)icmp + sizeof(struct icmphdr));
-                        orig_udp = (struct udphdr *)((u_char *)orig_ip + orig_ip->ihl * 4);
-                        port =  ntohs(orig_udp->uh_dport);
                         if (DEBUG)
                             printf("RECV ICMP [%s] -> [%s] | type=%d code=%d | UDP port CLOSED: %d | len: %d bytes\n", src_ip, dst_ip, icmp->type, icmp->code, ntohs(orig_udp->uh_dport),hdr->len);
                         modify_result_table (params, src_ip,port, PORT_CLOSED, UDP_SCAN);
-                        params->n_packet_recieved++;
                     }
-                
+                    else if (icmp->type == ICMP_DEST_UNREACH && icmp->code != ICMP_PORT_UNREACH)
+                    {
+                        if (DEBUG)
+                            printf("RECV ICMP [%s] -> [%s] | type=%d code=%d | UDP port FILTERED: %d | len: %d bytes\n", src_ip, dst_ip, icmp->type, icmp->code, ntohs(orig_udp->uh_dport),hdr->len);
+                        modify_result_table (params, src_ip, port, PORT_FILTERED, UDP_SCAN);
+                    }
+                    params->n_packet_recieved++;
+
                 break;
             default:
                 break;

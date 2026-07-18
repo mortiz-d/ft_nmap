@@ -69,8 +69,8 @@ void *send_scans(void *args){
             scan_port(task_args->params,addr, task->port, (t_scan)task->scan);
 
             // delay for udp scan
-            if ((t_scan)task->scan == UDP_SCAN)
-                usleep(task_args->params->udp_delay_us);
+            // if ((t_scan)task->scan == UDP_SCAN)
+            //     usleep(task_args->params->udp_delay_us);
         }
 
         // contamos solo tareas reales (tras procesarlas), asi 'expected' es exacto
@@ -172,9 +172,11 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
     int remaining, sent , dropped , new_delay;
 
     for (int retry = 0; retry < UDP_MAX_RETRIES; ++retry){
+        print_datetime_now();
         sent = args->n_packet_sended;
         dropped = sent - args->n_packet_recieved;
-
+        if (DEBUG)
+            printf("retry=%i sent=%i drop=%i\n", retry, sent, dropped);
         if (sent > 0 && (dropped * 100 / sent) > UDP_DROP_THRESHOLD_PCT && args->udp_delay_us < UDP_MAX_DELAY_US)
         {
             new_delay = args->udp_delay_us * 2;
@@ -186,6 +188,8 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
         }
 
         remaining = build_udp_retry_queue(args, &rhead, &rtail, scan);
+        if (DEBUG)
+            printf("remain=%i\n", remaining);
         if (remaining == 0)
             break;
 
@@ -199,7 +203,7 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
         if (DEBUG)
             printf("UDP retry %i/%i: %i puertos pendientes (delay %i us)\n",
                    retry + 1, UDP_MAX_RETRIES, remaining, args->udp_delay_us);
-        usleep(UDP_RETRY_WAIT_US);
+        // usleep(UDP_RETRY_WAIT_US);
         run_scan_pass(args, rhead, remaining);
     }
 }

@@ -1,4 +1,6 @@
 #include "../../lib/nmap.h"
+#include <netdb.h>
+#include <sys/socket.h>
 
 static int cmp_ip(void *a, void *b)
 {
@@ -46,14 +48,14 @@ static const char *port_state_str(t_port_state state)
             break;
         case PORT_UNFILTERED:
             return "UNFILTERED";
-            break; 
+            break;
         case PORT_UNCALLED:
             return "----------";
             break;
         case PORT_OPENFILTERED:
             return "OP|FILT";
             break;
-        
+
         default:
             break;
     }
@@ -102,7 +104,7 @@ void alter_port_status (t_list *port,  t_port_state state, t_scan scan)
 
 void generate_result_table(t_params *params)
 {
-    (void)params; 
+    (void)params;
     t_list **lst_res ;//= ft_calloc(1,sizeof(t_list*));
     t_list **lst_ports = NULL;
     t_list *ips, *ports;
@@ -127,7 +129,7 @@ void generate_result_table(t_params *params)
             ft_lstadd_back(lst_ports, ft_lstnew(aux_p));
             ports = ports->next;
         }
-        
+
         aux->port = lst_ports;
 
         ft_lstadd_back(lst_res, ft_lstnew(aux));
@@ -156,6 +158,8 @@ void print_result_table(t_params *params)
     t_list *a_scan, *p_scan;
     t_result_scan *scan ;
     t_result_port *port ;
+    struct servent *service;
+    char *srvname;
 
     a_scan = ((t_list *)*params->results);
     while (a_scan)
@@ -163,21 +167,29 @@ void print_result_table(t_params *params)
         scan = a_scan->content;
         p_scan = ((t_list *)*scan->port);
         printf("\n");
-        printf("%s\n",scan->dns);
-        printf("+--------+------------+------------+------------+------------+------------+------------+\n");
-        printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
-        printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+        printf("%s\n",scan->ip);
+        printf("+--------+------------+------------+------------+------------+------------+------------+------------+\n");
+        printf("| PORT   | SERVICE    | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
+        printf("+--------+------------+------------+------------+------------+------------+------------+------------+\n");
 
         while (p_scan)
         {
             port = p_scan->content;
+            service = getservbyport(htons(port->port_nbr), NULL);
+            if (!service)
+                srvname = ft_strdup("Unassigned");
+            else
+                srvname = ft_strdup(service->s_name);
+
             printf("| %-6d ", port->port_nbr);
+            printf("| %-10s ", srvname);
             for (int s = SYN_SCAN; s <= UDP_SCAN; ++s)
                 printf("| %-10s ", port_state_str(port->states[s]));
             printf("|\n");
+            free(srvname);
             p_scan = p_scan->next;
         }
-        printf("+--------+------------+------------+------------+------------+------------+------------+\n");
+        printf("+--------+------------+------------+------------+------------+------------+------------+------------+\n");
         a_scan = a_scan->next;
     }
 }

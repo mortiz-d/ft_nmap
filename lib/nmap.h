@@ -36,14 +36,14 @@
 #include <string.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
-#include <netinet/ip.h> 
+#include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/udp.h>
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <pcap.h> 
+#include <pcap.h>
 #include <netinet/tcp.h>
 #include <pthread.h>
 
@@ -180,5 +180,7 @@ void main_scan_logic(t_params* args);
 //CAPTURE
 pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_lst);
 void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp, int expected);
+
+void print_datetime_now(void);
 
 #endif
