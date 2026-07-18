@@ -348,7 +348,6 @@ int apply_scan(t_flag *flag, t_params *params)
     return 1;
 }
 
-
 t_list *flags_config (void)
 {
     t_list *flag = NULL;

@@ -7,19 +7,20 @@ RESET = "\033[1;0m"
 
 # RESOURCES #
 SRCS =	srcs/main.c   \
-		srcs/debug.c  \
+		srcs/debug/debug.c  \
 		srcs/params.c \
+		srcs/result/result.c \
+		srcs/scan/tcp/build.c \
+		srcs/scan/tcp/send.c \
+		srcs/scan/tcp/socket.c \
+		srcs/scan/udp/send.c \
+		srcs/scan/udp/socket.c \
+		srcs/scan/scanner.c \
+		srcs/scan/capture.c \
+		srcs/scan/handler.c \
+		srcs/scan/filter.c \
 		srcs/dns.c \
-		srcs/tcp/build.c \
-		srcs/tcp/send.c \
-		srcs/tcp/recv.c \
-		srcs/udp/recv.c \
-		srcs/udp/send.c \
-		srcs/a_pck_scan.c \
-		srcs/a_pck_capture.c \
-		srcs/table/table.c \
 		srcs/aux.c \
-		srcs/socket.c 
 
 # FLAGS #
 OBJS_DIR = objetos
@@ -39,7 +40,8 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@make -C ./libft
 #
-	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A) -lpthread -lpcap 
+	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT_A) -lpthread -lpcap
+	-sudo setcap cap_net_raw,cap_net_admin=eip $(NAME)
 	$(BLUE) $(NAME) set Up $(RESET)
 #	mv ./$(NAME) ./testing/files/$(NAME)
 

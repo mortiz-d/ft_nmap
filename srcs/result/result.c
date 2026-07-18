@@ -59,6 +59,16 @@ static const char *port_state_str(t_port_state state)
     return "UNKNOWN";
 }
 
+// Default state assumed when a scan gets no answer for a port, indexed by t_scan.
+static const t_port_state no_answer_default[] = {
+    PORT_FILTERED,      // SYN_SCAN
+    PORT_CLOSED,        // NUL_SCAN
+    PORT_OPENFILTERED,  // FIN_SCAN
+    PORT_OPENFILTERED,  // XMAS_SCAN
+    PORT_FILTERED,      // ACK_SCAN
+    PORT_OPENFILTERED,  // UDP_SCAN
+};
+
 t_result_port * generate_default_port (t_params *params, t_port *port)
 {
     t_result_port *r_scan;
@@ -67,39 +77,14 @@ t_result_port * generate_default_port (t_params *params, t_port *port)
 
     r_scan = ft_calloc(1,sizeof(t_result_port));
     r_scan->port_nbr = port->port_nbr;
-    
-    r_scan->syn = PORT_UNCALLED;
-    r_scan->nul = PORT_UNCALLED;
-    r_scan->ack = PORT_UNCALLED;
-    r_scan->fin = PORT_UNCALLED;
-    r_scan->xmas = PORT_UNCALLED;
-    r_scan->udp = PORT_UNCALLED;
+
+    for (int s = SYN_SCAN; s <= UDP_SCAN; ++s)
+        r_scan->states[s] = PORT_UNCALLED;
+
     scans = *params->scan;
     while (scans){
         scan = (t_scan *)scans->content;
-        switch (*scan)
-        {
-            case SYN_SCAN:
-                r_scan->syn = PORT_FILTERED;
-            break;
-            case NUL_SCAN:
-                r_scan->nul = PORT_CLOSED;
-            break;
-            case ACK_SCAN:
-                r_scan->ack = PORT_FILTERED;
-            break;
-            case FIN_SCAN:
-                r_scan->fin = PORT_OPENFILTERED;
-            break;
-            case XMAS_SCAN:
-                r_scan->xmas = PORT_OPENFILTERED;
-                break;
-            case UDP_SCAN:
-                r_scan->udp = PORT_OPENFILTERED;
-                break;
-            default:
-                break;
-        }
+        r_scan->states[*scan] = no_answer_default[*scan];
         scans = scans->next;
     }
 
@@ -109,28 +94,9 @@ t_result_port * generate_default_port (t_params *params, t_port *port)
 void alter_port_status (t_list *port,  t_port_state state, t_scan scan)
 {
     t_result_port *aux = port->content;
-    switch (scan)
-    {
-        case SYN_SCAN:
-            aux->syn = state;
-            break;
-        case NUL_SCAN:
-            aux->nul = state;
-            break;
-        case FIN_SCAN:
-            aux->fin = state;
-            break;
-        case XMAS_SCAN:
-            aux->xmas = state;
-            break;
-        case ACK_SCAN:
-            aux->ack = state;
-            break;
-        case UDP_SCAN:
-            aux->udp = state;
-        default:
-            break;
-    }  
+
+    if (scan >= SYN_SCAN && scan <= UDP_SCAN)
+        aux->states[scan] = state;
 }
 
 void generate_result_table(t_params *params)
@@ -155,7 +121,6 @@ void generate_result_table(t_params *params)
         lst_ports = ft_calloc(1,sizeof(t_list*));
         while (ports)
         {
-            // aux_p = ft_calloc(1,sizeof(t_result_port));
             aux_p = generate_default_port(params,(t_port *)ports->content);
             ft_lstadd_back(lst_ports, ft_lstnew(aux_p));
             ports = ports->next;
@@ -204,24 +169,13 @@ void print_result_table(t_params *params)
         while (p_scan)
         {
             port = p_scan->content;
-            printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",port->port_nbr,port_state_str(port->syn),port_state_str(port->nul),port_state_str(port->fin),port_state_str(port->xmas),port_state_str(port->ack),port_state_str(port->udp));
+            printf("| %-6d ", port->port_nbr);
+            for (int s = SYN_SCAN; s <= UDP_SCAN; ++s)
+                printf("| %-10s ", port_state_str(port->states[s]));
+            printf("|\n");
             p_scan = p_scan->next;
         }
         printf("+--------+------------+------------+------------+------------+------------+------------+\n");
         a_scan = a_scan->next;
     }
-    
-
-    // t_result_port *s;
-
-    
-    // while (lst)
-    // {
-    //     s = (t_result_port *)lst->content;
-
-    //     printf("| %-6d | %-10s | %-10s | %-10s | %-10s | %-10s | %-10s |\n",s->port_nbr,port_state_str(s->syn),port_state_str(s->nul),port_state_str(s->fin),port_state_str(s->xmas),port_state_str(s->ack),port_state_str(s->udp));
-    //     lst = lst->next;
-    // }
-
-   
 }

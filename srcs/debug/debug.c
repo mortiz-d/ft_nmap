@@ -1,4 +1,4 @@
-#include "../lib/nmap.h"
+#include "../../lib/nmap.h"
 
 static void debug_print_result_table(t_list *lst)
 {
@@ -16,7 +16,10 @@ static void debug_print_result_table(t_list *lst)
         while (port)
         {
             tport = (t_result_port *)port->content;
-            ft_printf ("%d %i %i %i %i %i %i %p\n", tport->port_nbr, tport->syn, tport->ack , tport->nul , tport->fin , tport->xmas , tport->udp, tport);
+            ft_printf ("%d ", tport->port_nbr);
+            for (int s = SYN_SCAN; s <= UDP_SCAN; ++s)
+                ft_printf ("%i ", tport->states[s]);
+            ft_printf ("%p\n", tport);
             port = port->next;
         }
 

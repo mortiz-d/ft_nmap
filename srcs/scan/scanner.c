@@ -1,46 +1,43 @@
-#include "../lib/nmap.h"
+#include "../../lib/nmap.h"
 
-static char *scan_to_string2(t_scan scan)
+static void scan_port_tcp(t_params *params, struct sockaddr_in addr, int port, t_scan scan)
 {
-    static char *names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP","UNKNOWN"};
-    if (scan >= SYN_SCAN && scan <= UDP_SCAN)
-        return names[scan];
-    return names[6];
-}
-
-void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan){
-
     char packet[4096];
-    int sockfd;
+    int  sockfd;
 
-    if (scan != UDP_SCAN)
-        sockfd = socket_connection_tcp(addr); //TCP
-    else
-        sockfd = socket_connection_udp(addr); //UDP
-
-
+    sockfd = socket_connection_tcp(addr);
     if (sockfd < 0)
     {
-        printf("Error: No se pudo crear el socket del puerto %i\n",port);
+        printf("Error: No se pudo crear el socket del puerto %i\n", port);
         return;
     }
 
     ft_bzero(packet, sizeof(packet));
-    if (scan != UDP_SCAN)
+    build_packet_tcp(packet, params, addr, port, scan);
+    send_packet_tcp(sockfd, packet, addr);
+    close(sockfd);
+}
+
+static void scan_port_udp(t_params *params, struct sockaddr_in addr, int port)
+{
+    int sockfd;
+
+    sockfd = socket_connection_udp(addr);
+    if (sockfd < 0)
     {
-        printf("Mensaje Mandado TCP - %s\n",scan_to_string2(scan));
-        build_packet_tcp(packet,params,addr,port,scan);
-        send_packet_tcp(sockfd, packet, addr);
-    }
-    else
-    {
-        printf("Mensaje Mandado UDP - %s\n",scan_to_string2(scan));
-        send_probe_udp(sockfd,addr,params,port);
+        printf("Error: No se pudo crear el socket del puerto %i\n", port);
+        return;
     }
 
+    send_probe_udp(sockfd, addr, params, port);
     close(sockfd);
-    ft_bzero(packet, sizeof(packet));
-    return;
+}
+
+void scan_port(t_params *params, struct sockaddr_in addr, int port, t_scan scan){
+    if (scan == UDP_SCAN)
+        scan_port_udp(params, addr, port);
+    else
+        scan_port_tcp(params, addr, port, scan);
 }
 
 static t_scan_task *dequeue(t_scan_task **head){
@@ -100,7 +97,7 @@ static void free_task_queue(t_scan_task *head)
     }
 }
 
-// Makes a queue with all open|filtered udp ports
+// Makes a queue with all open|filtered udp ports (default state)
 static int build_udp_retry_queue(t_params *args, t_scan_task **head, t_scan_task **tail, int scan)
 {
     t_list          *res = *args->results;
@@ -119,7 +116,7 @@ static int build_udp_retry_queue(t_params *args, t_scan_task **head, t_scan_task
         while (p)
         {
             rp = p->content;
-            if (rp->udp == PORT_OPENFILTERED)
+            if (rp->states[UDP_SCAN] == PORT_OPENFILTERED)
             {
                 t = malloc(sizeof(t_scan_task));
                 t->t_id = ++count;
@@ -140,7 +137,7 @@ static int build_udp_retry_queue(t_params *args, t_scan_task **head, t_scan_task
     return count;
 }
 
-// Does a run sending all requests and capturing/processing
+// Does a run sending all requests and capturing/processing (UDP might need a second or third run...)
 static void run_scan_pass(t_params *args, t_scan_task *head, int expected)
 {
     pthread_mutex_t queue_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -207,12 +204,8 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
     }
 }
 
-
-
 void main_scan_logic(t_params* args){
     t_list      *ips = *args->ip_list;
-    // t_list      *ports;
-    // t_scan      *scan;
     t_scan_task *head = NULL, *tail = NULL, *ptr;
     char        *local_dst;
     int         task_count = 0;
@@ -229,13 +222,13 @@ void main_scan_logic(t_params* args){
         {
             for (t_list *ips = *args->ip_list; ips; ips = ips->next)
             {
-                // printf("Message loaded as %s\n",scan_to_string2(*(t_scan *)scans->content));
                 t_scan *scan = scans->content;
 
                 ptr = malloc(sizeof(t_scan_task));
 
                 ptr->t_id = ++task_count;
                 ptr->ip = ft_strdup((char *)ips->content);
+                printf("BUSCAMOS %s\n",ptr->ip);
                 ptr->port = ((t_port *)ports->content)->port_nbr;
                 ptr->scan = *scan;
                 ptr->next = NULL;

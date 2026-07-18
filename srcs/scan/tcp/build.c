@@ -1,6 +1,6 @@
 
 
-#include "../../lib/nmap.h"
+#include "../../../lib/nmap.h"
 
 unsigned short checksum_tcp(char *b, int len)
 {
@@ -54,8 +54,6 @@ void build_ip_header(t_params *params,struct iphdr *ip, struct sockaddr_in dst)
     ip->daddr = dst.sin_addr.s_addr;            //Destiny IP
 }
 
-
-
 void build_tcp_header(struct tcphdr *tcp, int port, t_scan type)
 {
     ft_memset(tcp, 0, sizeof(struct tcphdr));
@@ -91,14 +89,6 @@ void build_packet_tcp(char *packet, t_params *params, struct sockaddr_in addr, i
 
     build_ip_header(params, ip, addr);
     build_tcp_header(tcp, port, type);
-
-    // char *payload = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
-    // strcpy(payload, "Hola mundo");
-
-    // ip->tot_len = htons(sizeof(struct iphdr) +
-    //                     sizeof(struct tcphdr) +
-    //                     strlen(payload));
-
 
     compute_tcp_checksum(ip, tcp); //(Tanto rollo para hacer el checksum :v )
     // debug_ip_header(ip);

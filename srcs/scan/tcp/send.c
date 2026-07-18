@@ -1,4 +1,4 @@
-#include "../../lib/nmap.h"
+#include "../../../lib/nmap.h"
 
 int send_packet_tcp(int sockfd, char *packet, struct sockaddr_in addr)
 {

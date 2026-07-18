@@ -13,12 +13,11 @@ int main(int argc, char **argv)
     t_list *flags = NULL;
     t_params *params = NULL;
 
-    params =  params_default_config();
     flags = flags_config();
+    params =  params_default_config();
 
     if (!process_flags(argc, argv, flags,params))
     {
-        // printf("?\n");
         return free_all(flags, params);
     }
 
@@ -26,10 +25,8 @@ int main(int argc, char **argv)
     debug_params(params);
     if (params->help == 1)
     {
-        // printf("?!\n");
         return free_all(flags, params);
     }
-
 
     if (params->ip_list == NULL)
     {
