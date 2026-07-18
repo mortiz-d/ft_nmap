@@ -22,6 +22,7 @@ void free_result(void *result)
     t_result_scan *scan;
 
     scan = (t_result_scan *)result;
+    free(scan->dns);
     free(scan->ip);
     ft_lstiter(*scan->port,free);
     ft_lstclear(scan->port);
@@ -116,7 +117,8 @@ void generate_result_table(t_params *params)
     while(ips)
     {
         aux = ft_calloc(1,sizeof(t_result_scan));
-        aux->ip = ft_strdup((char *)ips->content);
+        aux->dns = ft_strdup((char *)ips->content);
+        aux->ip = dns_lookup((char *)ips->content);
         ports = *(params->ports);
         lst_ports = ft_calloc(1,sizeof(t_list*));
         while (ports)
@@ -161,7 +163,7 @@ void print_result_table(t_params *params)
         scan = a_scan->content;
         p_scan = ((t_list *)*scan->port);
         printf("\n");
-        printf("%s\n",scan->ip);
+        printf("%s\n",scan->dns);
         printf("+--------+------------+------------+------------+------------+------------+------------+\n");
         printf("| PORT   | SYN        | NULL       | FIN        | XMAS       | ACK        | UDP        |\n");
         printf("+--------+------------+------------+------------+------------+------------+------------+\n");

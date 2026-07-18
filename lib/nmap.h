@@ -112,6 +112,7 @@ typedef struct s_result_port
 
 typedef struct s_result_scan
 {
+    char * dns;
     char * ip;
     t_list **port;
 }	t_result_scan;

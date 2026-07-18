@@ -33,6 +33,7 @@ int main(int argc, char **argv)
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
+    printf("KABOOM?\n");
     main_scan_logic(params);
 
     print_result_table(params);

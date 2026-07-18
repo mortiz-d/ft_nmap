@@ -227,8 +227,8 @@ void main_scan_logic(t_params* args){
                 ptr = malloc(sizeof(t_scan_task));
 
                 ptr->t_id = ++task_count;
-                ptr->ip = ft_strdup((char *)ips->content);
-                printf("BUSCAMOS %s\n",ptr->ip);
+                ptr->ip = dns_lookup((char *)ips->content);// ft_strdup();
+
                 ptr->port = ((t_port *)ports->content)->port_nbr;
                 ptr->scan = *scan;
                 ptr->next = NULL;

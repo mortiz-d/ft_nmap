@@ -8,13 +8,13 @@ static void debug_print_result_table(t_list *lst)
     t_list *port;
     while (lst)
     {
-
         table = (t_result_scan *)lst->content;
         printf("Result table %p \n",table );
         printf("ip: %s - %p\n",table->ip,table->ip);
         port = *table->port;
         while (port)
         {
+            
             tport = (t_result_port *)port->content;
             ft_printf ("%d ", tport->port_nbr);
             for (int s = SYN_SCAN; s <= UDP_SCAN; ++s)
