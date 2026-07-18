@@ -55,7 +55,7 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
 
     tcp = (struct tcphdr *)(pkt + 14 + ip->ihl * 4);
 
-    if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN)) //We make sure the msg is for ouurs
+    if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN)) //ICMP
     {
         switch (ip->protocol)
         {
@@ -115,6 +115,6 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
                 break;
             default:
                 break;
-        }
+            }
     }
 }

@@ -36,7 +36,7 @@ static char *join_filter(t_list *list, char *prefix, char *(*to_value)(void *con
 
 static char *ip_value(void *content)
 {
-    return ft_strdup((char *)content);
+    return dns_lookup((char *)content);
 }
 
 static char *tcp_port_value(void *content)

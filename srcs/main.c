@@ -54,6 +54,7 @@ int main(int argc, char **argv)
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
+    printf("KABOOM?\n");
 
     clock_gettime(CLOCK_MONOTONIC, &begin);
     main_scan_logic(params);
