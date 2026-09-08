@@ -1,5 +1,48 @@
 #include "../../lib/nmap.h"
 
+static bool has_local_target(t_params *params)
+{
+    char *ip;
+    int  local = 0;
+
+    for (t_list *ip_list = *params->ip_list; ip_list && !local; ip_list = ip_list->next)
+    {
+        ip = dns_lookup((char *)ip_list->content);
+        if (!ip)
+            continue;
+        if (!ft_strncmp(ip, params->internal_ip, INET_ADDRSTRLEN))
+            local = 1;
+        free(ip);
+    }
+    return local;
+}
+
+static char *pick_device(pcap_if_t *lst, char *local_ip, bool loopback)
+{
+    struct sockaddr_in *sin;
+    char buf[INET_ADDRSTRLEN];
+
+    for (pcap_if_t *d = lst; d; d = d->next)
+    {
+        if (loopback)
+        {
+            if (d->flags & PCAP_IF_LOOPBACK)
+                return d->name;
+            continue;
+        }
+        for (pcap_addr_t *a = d->addresses; a; a = a->next)
+        {
+            if (!a->addr || a->addr->sa_family != AF_INET)
+                continue;
+            sin = (struct sockaddr_in *)a->addr;
+            inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf));
+            if (!ft_strncmp(buf, local_ip, INET_ADDRSTRLEN))
+                return d->name;
+        }
+    }
+    return lst->name;
+}
+
 
 pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_lst){
     char        errbuf[PCAP_ERRBUF_SIZE];
@@ -10,7 +53,9 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
         printf("Couldn't find device: %s\n", errbuf);
         return NULL;
     }
-    dev = (*dev_lst)->name;
+    dev = pick_device(*dev_lst, params->internal_ip, has_local_target(params));
+    if (DEBUG)
+        printf("DEVICE -> %s (local ip %s)\n", dev, params->internal_ip);
 
     handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
     if (!handle) {

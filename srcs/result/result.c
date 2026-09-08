@@ -65,7 +65,7 @@ static const char *port_state_str(t_port_state state)
 // Default state assumed when a scan gets no answer for a port, indexed by t_scan.
 static const t_port_state no_answer_default[] = {
     PORT_FILTERED,      // SYN_SCAN
-    PORT_CLOSED,        // NUL_SCAN
+    PORT_OPENFILTERED,  // NUL_SCAN
     PORT_OPENFILTERED,  // FIN_SCAN
     PORT_OPENFILTERED,  // XMAS_SCAN
     PORT_FILTERED,      // ACK_SCAN

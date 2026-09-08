@@ -71,7 +71,7 @@ typedef enum e_port_state
 typedef enum e_scan
 {
     SYN_SCAN, //SYN-ACK signal = Port open | RST signal = port closed | No anwser = filtered
-    NUL_SCAN, //No anwser = Port closed | RST signal  = port open
+    NUL_SCAN, //No anwser = Port open/filtered | RST signal = port closed
     FIN_SCAN, //No anwser = Port open/filtered | RST signal = port closed
     XMAS_SCAN,//No anwser = Port open/filtered | RST signal = port closed
     ACK_SCAN, //No anwser = filtered | RST signal = unfiltered

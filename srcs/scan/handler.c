@@ -16,16 +16,11 @@ t_port_state determine_status_tcp (struct tcphdr *tcp, int port_recv)
             else if ( ack && syn )
                 return PORT_OPEN;
             break;
-        case NUL_PORT:
-            if ( ack && rst )
-                return PORT_CLOSED;
-            else if ( rst )
-                return PORT_OPEN;
-            break;
         case ACK_PORT:
             if ( rst )
                 return PORT_UNFILTERED;
             break;
+        case NUL_PORT:
         case XMAS_PORT:
         case FIN_PORT:
             if ( rst )
@@ -55,8 +50,6 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
 
     tcp = (struct tcphdr *)(pkt + 14 + ip->ihl * 4);
 
-    if (ft_strncmp(src_ip, params->internal_ip,INET_ADDRSTRLEN)) //ICMP
-    {
         switch (ip->protocol)
         {
             case IPPROTO_TCP:
@@ -81,6 +74,9 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
             case IPPROTO_UDP:
                 udp = (struct udphdr *)(pkt + 14 + ip->ihl * 4);
                 port = ntohs(udp->uh_sport);
+
+                if (port == UDP_DEFAULT_BASE_PORT) //es nuestra propia sonda (loopback)
+                    break;
 
                 if (DEBUG)
                 {
@@ -116,5 +112,4 @@ void packet_handler(u_char *args, const struct pcap_pkthdr *hdr, const u_char *p
             default:
                 break;
             }
-    }
 }
