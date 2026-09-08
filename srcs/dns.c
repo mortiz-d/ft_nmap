@@ -60,29 +60,3 @@ char *dns_lookup(char *host) {
     freeaddrinfo(result);
     return res;
 }
-
-//NOT IN USE (COPPIED FROM PING)
-// char *ip_a_dns(const char *ip_str)
-// {
-//     struct sockaddr_in sa;
-//     char host[NI_MAXHOST];
-//     int err;
-//     char *dns;
-
-//     ft_memset(&sa, 0, sizeof(sa));
-//     sa.sin_family = AF_INET;
-
-//     if (inet_pton(AF_INET, ip_str, &sa.sin_addr) != 1)
-//         return NULL;
-
-//     err = getnameinfo((struct sockaddr *)&sa, sizeof sa, host, sizeof host, NULL, 0, NI_NAMEREQD);
-//     if (err != 0)
-//         return NULL;
-
-//     dns = malloc(strlen(host) + 1);
-//     if (!dns)
-//         return NULL;
-
-//     strcpy(dns, host);
-//     return dns;
-// }

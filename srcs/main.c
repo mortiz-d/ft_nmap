@@ -1,5 +1,19 @@
-//#include <studio.h>
 #include "../lib/nmap.h"
+#include <unistd.h>
+
+void print_datetime_now(void) {
+    struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
+        struct tm *local = localtime(&ts.tv_sec);
+
+        char buffer[64];
+        strftime(buffer, sizeof(buffer), "%H:%M:%S", local);
+
+        long milliseconds = ts.tv_nsec / 1000000;
+
+        printf("%s.%03ld\n", buffer, milliseconds);
+}
 
 int free_all(t_list *flags, t_params *params)
 {
@@ -9,17 +23,19 @@ int free_all(t_list *flags, t_params *params)
     return 1;
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
     t_list *flags = NULL;
     t_params *params = NULL;
-    t_list *ip_selected = NULL;
-    char *aux;
-    (void) ip_selected;
-    (void) aux;
+    struct timespec begin, end;
 
-    params =  params_default_config();
+    if (getuid()){
+        printf("This program must be run as sudo.\n");
+        return 0;
+    }
+
     flags = flags_config();
+    params =  params_default_config();
 
     if (!process_flags(argc, argv, flags,params))
     {
@@ -33,25 +49,21 @@ int main(int argc, char **argv)
         return free_all(flags, params);
     }
 
-
     if (params->ip_list == NULL)
     {
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
+    printf("KABOOM?\n");
 
-    //This process the nmap
+    clock_gettime(CLOCK_MONOTONIC, &begin);
+    main_scan_logic(params);
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
-    ip_selected = *params->ip_list;
-    while (ip_selected)
-    {
-        printf("argv->%s\n", (char *)ip_selected->content);
-        aux = dns_lookup((char *)ip_selected->content);
-        get_local_ip(aux, params->internal_ip);
-        params->active_ip = aux;
-        main_scan_logic(params);
-        free(aux);
-        ip_selected = ip_selected->next;
-    }
+
+    double elapsed = (end.tv_sec - begin.tv_sec) + (end.tv_nsec - begin.tv_nsec) / 1e9;
+    printf("Performed scans in %.2f seconds\n", elapsed);
+
+    print_result_table(params);
     return free_all(flags, params);
 }

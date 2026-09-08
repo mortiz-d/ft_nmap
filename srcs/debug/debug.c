@@ -1,6 +1,31 @@
-#include "../lib/nmap.h"
+#include "../../lib/nmap.h"
 
-// #include "../lib/nmap.h"
+static void debug_print_result_table(t_list *lst)
+{
+    t_result_scan *table;
+        t_result_port *tport;
+
+    t_list *port;
+    while (lst)
+    {
+        table = (t_result_scan *)lst->content;
+        printf("Result table %p \n",table );
+        printf("ip: %s - %p\n",table->ip,table->ip);
+        port = *table->port;
+        while (port)
+        {
+            
+            tport = (t_result_port *)port->content;
+            ft_printf ("%d ", tport->port_nbr);
+            for (int s = SYN_SCAN; s <= UDP_SCAN; ++s)
+                ft_printf ("%i ", tport->states[s]);
+            ft_printf ("%p\n", tport);
+            port = port->next;
+        }
+
+        lst = lst->next;    
+    }
+}
 
 static void print_ports(t_list *lst)
 {
@@ -85,6 +110,18 @@ void debug_params(t_params *params)
         print_scans(*params->scan);
     else
         printf("No scans\n");
+
+    
+    if (params->udp_active)
+    {
+        printf("\n--- SCANS ---\nUDP SCAN ACTIVATED TOO\n");
+    }
+
+    printf("\n--- RESULT TABLE ---\n");
+    if (params->results)
+        debug_print_result_table(*params->results);
+    else
+        printf("No result table\n");
 
     printf("======= END DEBUG =======\n");
 }
