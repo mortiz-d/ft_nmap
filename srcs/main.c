@@ -29,11 +29,6 @@ int main(int argc, char **argv)
     t_params *params = NULL;
     struct timespec begin, end;
 
-    if (getuid()){
-        printf("This program must be run as sudo.\n");
-        return 0;
-    }
-
     flags = flags_config();
     params =  params_default_config();
 
@@ -43,18 +38,24 @@ int main(int argc, char **argv)
     }
 
     generate_result_table(params);
-    debug_params(params);
+    if (DEBUG)
+        debug_params(params);
     if (params->help == 1)
     {
         return free_all(flags, params);
     }
 
-    if (params->ip_list == NULL)
+    if (params->ip_list == NULL || *params->ip_list == NULL)
     {
         printf("Error :No IPs where given to nmap\n");
         return free_all(flags, params);
     }
-    printf("KABOOM?\n");
+    if (getuid())
+    {
+        printf("Error: %s needs root privileges to send raw packets (try sudo).\n", EXEC_NAME);
+        free_all(flags, params);
+        return 1;
+    }
 
     clock_gettime(CLOCK_MONOTONIC, &begin);
     main_scan_logic(params);

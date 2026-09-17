@@ -90,7 +90,15 @@ static int add_port_range(t_list **lst, char* str )
             min = ft_atoi(ports[0]);
             max = ft_atoi(ports[1]);
 
-            if (min < max)
+            if (min > max)
+                printf("Error: Port range %s - %s is backwards are you sure?\n",ports[0],ports[1]);
+            else if (min < MIN_PORT_RANGE || max > MAX_PORT_RANGE)
+                printf("Error: Port range %i - %i needs to be between port ranges %i - %i \n",
+                       min, max, MIN_PORT_RANGE, MAX_PORT_RANGE);
+            else if (max - min + 1 > MAX_PORTS_TO_SCAN)
+                printf("Error: Port range %i - %i holds %i ports, max is %i\n",
+                       min, max, max - min + 1, MAX_PORTS_TO_SCAN);
+            else
             {
                 for (int p = min; p <= max; p++)
                 {
@@ -102,8 +110,6 @@ static int add_port_range(t_list **lst, char* str )
                 }
                 created=1;
             }
-            else
-                printf("Error: Port range %s - %s is backwards are you sure?\n",ports[0],ports[1]);
         }
         else
             printf("Error: Cannot determine port range %s - %s\n",ports[0],ports[1]);
@@ -123,9 +129,11 @@ static int add_port_range(t_list **lst, char* str )
 
 static t_scan get_scan(char *str)
 {
-    const char *scan_names[] = {"SYN","NUL","FIN","XMAS","ACK","UDP"};
+    const char *scan_names[] = {"SYN","NULL","FIN","XMAS","ACK","UDP"};
     int num_scans = sizeof(scan_names) / sizeof(scan_names[0]);
 
+    if (strcmp(str, "NUL") == 0)
+        return NUL_SCAN;
     for (int i = 0; i < num_scans; i++)
     {
         if (strcmp(str, scan_names[i]) == 0)
@@ -147,6 +155,12 @@ static int extract_scan(t_params *params,char *str)
     for(int i = 0; scans[i] != NULL; i++)
     {
         aux = get_scan(scans[i]);
+        if (aux == SCAN_UNKNOWN)
+        {
+            printf("Error: '%s' is not a valid scan type (SYN/NULL/FIN/XMAS/ACK/UDP)\n", scans[i]);
+            error = 1;
+            break;
+        }
         new_aux = malloc(sizeof(t_scan));
         if (!new_aux)
         {
@@ -227,6 +241,11 @@ static int extract_ports(t_params *params, char* str)
     ft_lstsort(*lst_ports, cmp_port);
     params->ports = lst_ports;
     params->n_ports = ft_lstsize(*lst_ports);
+    if (!error && params->n_ports > MAX_PORTS_TO_SCAN)
+    {
+        printf("Error: Too many ports to scan (%i), max is %i\n", params->n_ports, MAX_PORTS_TO_SCAN);
+        error = 1;
+    }
     
     for(int i = 0; ports[i] != NULL; i++)
         free(ports[i]);
@@ -253,15 +272,17 @@ static int ip_exists(t_list **lst, char *ip)
     return (ft_lstfind_match(*lst, match_ip, ip) != NULL);
 }
 
-static t_list *extract_ip_lists(t_params *params, char *filename)
+static int extract_ip_lists(t_params *params, char *filename)
 {
-    t_list *lst_ips = NULL;
     char *aux,*aux2;
     int fd;
 
     fd = open(filename, O_RDONLY);
     if (fd < 0)
-        return NULL;
+    {
+        printf("Error: Cannot open file '%s'\n", filename);
+        return 0;
+    }
     aux = get_next_line(fd);
     while (aux)
     {
@@ -275,8 +296,7 @@ static t_list *extract_ip_lists(t_params *params, char *filename)
         aux = get_next_line(fd);
     }
     close(fd);
-    return lst_ips;
-
+    return 1;
 }
 
 static t_list *extract_ip(char *ip)
@@ -323,12 +343,17 @@ int apply_file(t_flag *flag, t_params *params)
 {
     if (!params->ip_list)
         params->ip_list = ft_calloc(1,sizeof(t_list*));
-    extract_ip_lists(params,flag->value.str_value);
-    return 1;
+    return extract_ip_lists(params,flag->value.str_value);
 }
 
 int apply_speedup(t_flag *flag, t_params *params)
 {
+    if (flag->value.int_value < 1 || flag->value.int_value > MAX_THREADS)
+    {
+        printf("Error: '%i' threads, --speedup needs to be between 1 - %i\n",
+               flag->value.int_value, MAX_THREADS);
+        return 0;
+    }
     params->threads = flag->value.int_value;
     return 1;
 }
@@ -368,7 +393,7 @@ t_params *params_default_config (void)
     param->ip_list = NULL;
     param->udp_delay_us = UDP_PROBE_DELAY_US;
     extract_ports(param,"0-1023");
-    extract_scan(param,"SYN/NUL/FIN/XMAS/ACK/UDP");
+    extract_scan(param,"SYN/NULL/FIN/XMAS/ACK/UDP");
     // extract_scan(param,"UDP");
     
     return param;

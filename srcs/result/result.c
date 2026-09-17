@@ -87,7 +87,8 @@ t_result_port * generate_default_port (t_params *params, t_port *port)
     scans = *params->scan;
     while (scans){
         scan = (t_scan *)scans->content;
-        r_scan->states[*scan] = no_answer_default[*scan];
+        if (*scan >= SYN_SCAN && *scan <= UDP_SCAN)
+            r_scan->states[*scan] = no_answer_default[*scan];
         scans = scans->next;
     }
 

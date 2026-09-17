@@ -5,11 +5,13 @@
 #define _POSIX_C_SOURCE 200809L //Esto es para mi ordenador que puede actuar funny el hijopu
 #define NMAP_USSAGE_ERROR "./ft_nmap --help <args>\n"
 
-#define DEBUG 1
+#define DEBUG 0
 #define NI_MAXHOST 1025
 
 #define MIN_PORT_RANGE 0
 #define MAX_PORT_RANGE 65535
+#define MAX_PORTS_TO_SCAN 1024
+#define MAX_THREADS 250
 #define UDP_DEFAULT_BASE_PORT 33434
 #define SOURCE_PORT 52340
 #define SYN_PORT 52341

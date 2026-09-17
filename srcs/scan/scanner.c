@@ -172,7 +172,8 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
     int remaining, sent , dropped , new_delay;
 
     for (int retry = 0; retry < UDP_MAX_RETRIES; ++retry){
-        print_datetime_now();
+        if (DEBUG)
+            print_datetime_now();
         sent = args->n_packet_sended;
         dropped = sent - args->n_packet_recieved;
         if (DEBUG)
@@ -209,11 +210,14 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
 }
 
 void main_scan_logic(t_params* args){
-    t_list      *ips = *args->ip_list;
+    t_list      *ips;
     t_scan_task *head = NULL, *tail = NULL, *ptr;
     char        *local_dst;
     int         task_count = 0;
 
+    if (!args->ip_list || !*args->ip_list)
+        return;
+    ips = *args->ip_list;
     local_dst = dns_lookup((char *)ips->content);
     if (local_dst){
         get_local_ip(local_dst, args->internal_ip);
