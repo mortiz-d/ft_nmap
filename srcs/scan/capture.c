@@ -57,7 +57,7 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
     if (DEBUG)
         printf("DEVICE -> %s (local ip %s)\n", dev, params->internal_ip);
 
-    handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
+    handle = pcap_open_live(dev, BUFSIZ, 1, PCAP_BUFFER_TIMEOUT_MS, errbuf);
     if (!handle) {
         printf("Couldn't open device: %s\n", errbuf);
         pcap_freealldevs(*dev_lst);
@@ -79,17 +79,25 @@ pcap_t *capture_setup(t_params *params, struct bpf_program *fp, pcap_if_t **dev_
     return handle;
 }
 
-void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp, int expected){
-    time_t      start;
+static long elapsed_ms(struct timespec *start)
+{
+    struct timespec now;
 
-    start = time(NULL);
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return ((now.tv_sec - start->tv_sec) * 1000) + ((now.tv_nsec - start->tv_nsec) / 1000000);
+}
+
+void capture_listen(t_params *params, pcap_t *handle, pcap_if_t *dev_lst, struct bpf_program *fp, int expected){
+    struct timespec start;
+
     while ( params->n_packet_sended < expected )
     {
         pcap_dispatch(handle, -1, packet_handler, (u_char *)params);
         usleep(1000);
     }
 
-    while (time(NULL) - start < 5)
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    while (elapsed_ms(&start) < TIMEOUT_MS)
     {
         if (params->n_packet_recieved >= params->n_packet_sended)
             break;
