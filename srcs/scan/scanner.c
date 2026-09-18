@@ -204,7 +204,6 @@ static void udp_retransmit(t_params *args, int scan, int total_ports)
         if (DEBUG)
             printf("UDP retry %i/%i: %i puertos pendientes (delay %i us)\n",
                    retry + 1, UDP_MAX_RETRIES, remaining, args->udp_delay_us);
-        // usleep(UDP_RETRY_WAIT_US);
         run_scan_pass(args, rhead, remaining);
     }
 }
